@@ -1,0 +1,25 @@
+{
+  "datasets": {
+    "TS001": "Number of usual residents in households and communal establishments",
+    "TS002": "Legal partnership status",
+    "TS003": "Household composition",
+    "TS004": "Country of birth",
+    "TS005": "Passports held",
+    "TS006": "Population density",
+    "TS007": "Age by single year of age",
+    "TS007A": "Age by five-year age bands",
+    "TS008": "Sex",
+    "TS009": "Sex by single year of age",
+    "TS010": "Living arrangements",
+    "TS011": "Households by deprivation dimensions",
+    "TS012": "Country of birth (detailed)",
+    "TS013": "Passports held (detailed)",
+    "TS015": "Year of arrival in UK",
+    "TS016": "Length of residence",
+    "TS017": "Household size",
+    "TS018": "Age of arrival in the UK",
+    "TS019": "Migrant Indicator",
+    "TS020": "Number of non-UK short-term residents by sex",
+    "TS041": "Number of Households"
+  }
+}

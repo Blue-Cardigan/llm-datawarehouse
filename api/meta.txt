@@ -1,0 +1,10 @@
+Table names:
+oa: Use by default unless another area is specified. The lowest level of geography for which statistics are produced.
+ltla: Lower tier local authorities including non-metropolitan districts, unitary authorities, metropolitan districts, and London boroughs.
+lsoa: Lower layer Super Output Areas
+msoa: Middle layer Super Output Areas
+utla: Upper-Tier Local Authorities
+rgn: Region
+ctry: Country
+
+Use the dataset-table pair in your query, for example "ts001-oa", "ts002-ltla" etc.

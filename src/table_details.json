@@ -1,0 +1,46 @@
+{
+    "TS021": {
+        "name": "Ethnic group",
+        "table_names": [
+            "census2021-ts021-msoa",
+            "census2021-ts021-ltla",
+            "census2021-ts021-ctry",
+            "census2021-ts021-oa",
+            "census2021-ts021-rgn",
+            "census2021-ts021-utla",
+            "census2021-ts021-lsoa"
+        ]
+    },
+    "TS022": {
+        "name": "Ethnic group (detailed)",
+        "table_names": [
+            "census2021-ts022-rgn",
+            "census2021-ts022-utla",
+            "census2021-ts022-ctry",
+            "census2021-ts022-ltla",
+            "census2021-ts022-msoa"
+        ]
+    },
+    "TS030": {
+        "name": "Religion",
+        "table_names": [
+            "census2021-ts030-msoa",
+            "census2021-ts030-rgn",
+            "census2021-ts030-ltla",
+            "census2021-ts030-ctry",
+            "census2021-ts030-utla",
+            "census2021-ts030-lsoa",
+            "census2021-ts030-oa"
+        ]
+    },
+    "TS031": {
+        "name": "Religion (detailed)",
+        "table_names": [
+            "census2021-ts031-msoa",
+            "census2021-ts031-ltla",
+            "census2021-ts031-ctry",
+            "census2021-ts031-rgn",
+            "census2021-ts031-utla"
+        ]
+    }
+}
