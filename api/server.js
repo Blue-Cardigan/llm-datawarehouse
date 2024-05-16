@@ -1,4 +1,4 @@
-// brew services start postgres
+// brew services start postgresql
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
