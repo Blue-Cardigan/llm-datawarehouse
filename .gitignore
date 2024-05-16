@@ -4,6 +4,10 @@ node_modules/
 # Environment variables
 .env
 
+data/
+api.tar.gz
+hashpassword.js
+
 # Private key for ssh
 first-pair.pem
 
