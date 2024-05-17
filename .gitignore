@@ -5,8 +5,7 @@ node_modules/
 .env
 
 data/
-api.tar.gz
-hashpassword.js
+venv/
 
 # Private key for ssh
 first-pair.pem

@@ -43,7 +43,7 @@ const SearchAndFilter = () => {
 
   const fetchColumnNames = async (table) => {
     try {
-      const response = await fetch(`http://localhost:5000/columnNames?table=${table}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/columnNames?table=${table}`);
       const data = await response.json();
       setColumnNames(data);
     } catch (error) {
@@ -67,7 +67,7 @@ const SearchAndFilter = () => {
 
   const fetchCtryRgnLA = async () => {
     try {
-      const response = await fetch('http://localhost:5000/LargeRegions');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/LargeRegions`);
       const data = await response.json();
       setLargeRegions(data);
     } catch (error) {
@@ -77,7 +77,7 @@ const SearchAndFilter = () => {
 
   const fetchSOAs = async (ltla) => {
     try {
-      const response = await fetch(`http://localhost:5000/subregions?ltla=${ltla}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/subregions?ltla=${ltla}`);
       const data = await response.json();
       setSelectedLTLAData((prev) => ({ ...prev, [ltla]: data }));
     } catch (error) {
@@ -145,7 +145,7 @@ const SearchAndFilter = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/paramQuery`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/paramQuery`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
