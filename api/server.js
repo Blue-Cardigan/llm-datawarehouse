@@ -11,14 +11,18 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // let geographyData = [];
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('build'));
+app.use(express.static(path.join(__dirname, '../build')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../build', 'index.html'));
+});
 
 const secretKey = 'secretkey';
 

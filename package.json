@@ -5,12 +5,12 @@
   "main": "api/server.js",
   "scripts": {
     "server": "node api/server.js",
-    "start": "react-scripts start",
+    "start": "node api/server.js",
     "dev": "nodemon api/server.js",
     "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "NODE_OPTIONS=--openssl-legacy-provider npm run build"
   },
   "dependencies": {
     "axios": "^0.21.4",
