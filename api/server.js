@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const { Pool } = require('pg');
+const { Client } = require('pg');
 const { OpenAI } = require("openai");
 const fs = require('fs');
 const path = require('path');
@@ -22,13 +22,22 @@ app.use(express.static('build'));
 
 const secretKey = 'secretkey';
 
-// PostgreSQL client setup
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  database: process.env.DB_NAME
+// PostgreSQL client setup (local)
+// const client = new Client({
+//   host: process.env.DB_HOST,
+//   port: process.env.DB_PORT,
+//   user: process.env.DB_USER,
+//   database: process.env.DB_NAME
+// });
+
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
+
+client.connect();
 
 // OpenAI API setup
 const openai = new OpenAI({
@@ -68,7 +77,7 @@ async function returnSchemas(query) {
     const dataset_list = matches ? matches.map(title => title.trim().toLowerCase().replace(/\s/g, '')) : [];
       
     const queryText = 'SELECT schema_description FROM schema_descriptions WHERE directory_name = ANY($1)';
-    const schemaDescriptions = await pool.query(queryText, [dataset_list]);
+    const schemaDescriptions = await client.query(queryText, [dataset_list]);
     console.log(`Dataset_list: ${dataset_list}`);  
     console.log(`Query: ${queryText}`);
     console.log(`Rows: ${schemaDescriptions.rows}`);
@@ -107,7 +116,7 @@ async function convertToSQL(query, schemas) {
 // Function to fetch column name mappings from the database
 async function mapOriginalToHashed() {
   const query = 'SELECT original_name, hashed_name FROM column_name_mappings';
-  const result = await pool.query(query);
+  const result = await client.query(query);
   return result.rows.reduce((acc, row) => {
     acc[row.original_name] = row.hashed_name;
     return acc;
@@ -117,7 +126,7 @@ async function mapOriginalToHashed() {
 // Function to fetch column name mappings from the database and map hashed names to original names
 async function mapHashedToOriginal() {
   const query = 'SELECT original_name, hashed_name FROM column_name_mappings';
-  const result = await pool.query(query);
+  const result = await client.query(query);
   return result.rows.reduce((acc, row) => {
     acc[row.hashed_name] = row.original_name; // Reverse the mapping here
     return acc;
@@ -126,7 +135,7 @@ async function mapHashedToOriginal() {
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+  const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
 
   if (result.rows.length === 0) {
     return res.status(401).json({ error: 'Invalid username or password' });
@@ -164,7 +173,7 @@ app.get('/subregions', async (req, res) => {
   `;
 
   try {
-      const result = await pool.query(sqlQuery, [ltla]);
+      const result = await client.query(sqlQuery, [ltla]);
       const nestedOptions = {};
 
       result.rows.forEach(row => {
@@ -224,7 +233,7 @@ app.get('/outputAreas', async (req, res) => {
       WHERE lsoa = $1;
   `;
   try {
-    const result = await pool.query(sqlQuery, [lsoa]);
+    const result = await client.query(sqlQuery, [lsoa]);
     const outputAreas = result.rows.map(row => row.oa);
     res.json(outputAreas);
 } catch (error) {
@@ -246,7 +255,7 @@ app.get('/columnNames', async (req, res) => {
 
   try {
     // Fetch column names from the database
-    const result = await pool.query(sqlQuery, [tableName]);
+    const result = await client.query(sqlQuery, [tableName]);
     const columnNames = result.rows.map(row => row.column_name);
     const columnNameMappings = await mapHashedToOriginal();
     const mappedColumnNames = columnNames.map(columnName => columnNameMappings[columnName] || columnName);
@@ -286,7 +295,7 @@ app.post('/paramQuery', async (req, res) => {
       WHERE geography = ANY($1);
     `;
 
-    const result = await pool.query(sqlQuery, [geographyValues]);
+    const result = await client.query(sqlQuery, [geographyValues]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'No data found for the specified parameters' });
     }
@@ -336,7 +345,7 @@ app.post('/llmQuery', async (req, res) => {
     sqlQuery = sqlQuery.replace(/^"(.*)"$/, '$1');
 
     console.log('Generated SQL Query:', sqlQuery);
-    const dbResponse = await pool.query(sqlQuery);
+    const dbResponse = await client.query(sqlQuery);
     res.json({ data: dbResponse.rows, query: sqlQuery });
   } catch (error) {
     console.error('Error processing request:', error);
