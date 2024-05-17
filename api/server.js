@@ -34,11 +34,10 @@ const secretKey = 'secretkey';
 //   database: process.env.DB_NAME
 // });
 
+const isProduction = process.env.NODE_ENV === 'production';
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: isProduction ? { rejectUnauthorized: false } : false
 });
 
 client.connect();
