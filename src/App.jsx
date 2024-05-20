@@ -25,18 +25,21 @@ function App() {
   return (
     <div className="App">
       <h1>Asylum Data Query Interface</h1>
+      <h4>Select a tab below to decide how you want to query data</h4>
       <div className="tab-menu">
         <button 
           className={`tab-button ${activeTab === 'search' ? 'active' : ''}`} 
           onClick={() => setActiveTab('search')}
         >
-          Search and Filter
+          <div>Search and Filter</div>
+          <span className="tab-subtext">Find data manually by filtering datasets and geographies. Use if you already know exactly which data you're looking for.</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'llmQuery' ? 'active' : ''}`} 
           onClick={() => setActiveTab('llmQuery')}
         >
-          LLM Query
+          <div>LLM Query</div>
+          <span className="tab-subtext">Explore datasets using LLM-based queries. Use this method if you have a question and want to see what data is available.</span>
         </button>
       </div>
       {activeTab === 'search' ? (

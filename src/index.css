@@ -50,6 +50,12 @@ h2 {
   margin-left: 10px;
 }
 
+h4 {
+  color: #fff; /* White headers for contrast */
+  text-align: center; /* Center align headers */
+  margin-bottom: 20px;
+}
+
 /* Form styling */
 form {
   display: flex;
@@ -70,13 +76,28 @@ label {
 }
 
 .tab-button {
-  padding: 10px 20px;
+  width: 450px; /* Set a fixed width */
+  height: 450px; /* Set a fixed height to make it square */
+  padding: 5px; /* Remove padding to maintain the square shape */
   margin: 0 5px;
   border: none;
   background-color: #333; /* Darker buttons */
   color: #fff; /* White text */
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-size: 24px; /* Increase font size for larger buttons */
+  text-align: center; /* Center text horizontally */
+  line-height: 1.2; /* Adjust line height for better text spacing */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.tab-subtext {
+  font-size: 18px; /* Smaller font size for subtext */
+  color: #ccc; /* Lighter color for subtext */
+  margin-top: 5px; /* Space between main text and subtext */
 }
 
 .tab-button:hover {
