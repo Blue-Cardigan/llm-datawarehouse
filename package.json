@@ -10,7 +10,8 @@
     "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "heroku-postbuild": "NODE_OPTIONS=--openssl-legacy-provider npm run build"
+    "heroku-postbuild": "NODE_OPTIONS=--openssl-legacy-provider npm run build",
+    "client": "react-scripts start"
   },
   "dependencies": {
     "axios": "^1.6.8",

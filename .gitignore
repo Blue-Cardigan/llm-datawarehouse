@@ -6,6 +6,7 @@ node_modules/
 
 data/
 venv/
+database.ipynb
 
 # Private key for ssh
 first-pair.pem

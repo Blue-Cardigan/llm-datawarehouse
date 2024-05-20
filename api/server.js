@@ -1,4 +1,3 @@
-// brew services start postgresql
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
@@ -13,41 +12,41 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// let geographyData = [];
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../build')));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../build', 'index.html'));
-});
-
 const secretKey = 'secretkey';
 
-// PostgreSQL client setup (local)
-// const client = new Client({
-//   host: process.env.DB_HOST,
-//   port: process.env.DB_PORT,
-//   user: process.env.DB_USER,
-//   database: process.env.DB_NAME
-// });
-
+// PostgreSQL client setup (remote)
 const isProduction = process.env.NODE_ENV === 'production';
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: isProduction ? { rejectUnauthorized: false } : false
+  ssl: {
+        require: true,
+        rejectUnauthorized: false 
+      }
 });
 
-client.connect();
-
+client.connect().catch(err => console.error('Connection error', err.stack));
+console.log(`connected to, ${client}`);
 // OpenAI API setup
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const tableNameMappings = JSON.parse(fs.readFileSync(path.join(__dirname, 'file-table-map.json'), 'utf8')).filenames;
+
+app.get('/largeRegions', (req, res) => {
+  try {
+    const largeRegions = require('./geography_mapping.json');
+    res.json(largeRegions);
+  } catch (error) {
+    console.error('Error in /largeRegions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Select relevant datasets using natural language query
 async function returnSchemas(query) {
@@ -95,24 +94,24 @@ async function returnSchemas(query) {
 // Convert natural language to SQL using OpenAI's GPT
 async function convertToSQL(query, schemas) {
   try {
-      // Load meta.txt asynchronously
-      const meta = await fs.promises.readFile(path.join(__dirname, 'meta.txt'), 'utf8');
-      const prompt = `Rephrase the provided statement into a PostgreSQL query that can be run against a database with the schema below. Return only the SQL query as a string. \n\nStatement: ${query}\n\nSchemas: ${schemas.join("\n")}\n\n${meta}`
-      console.log(prompt)
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "user",
-            content: `${prompt}`,
-          },
-        ],
-      });
+    // Load meta.txt asynchronously
+    const meta = await fs.promises.readFile(path.join(__dirname, 'meta.txt'), 'utf8');
+    const prompt = `Rephrase the provided statement into a PostgreSQL query that can be run against a database with the schema below. Return only the SQL query as a string. \n\nStatement: ${query}\n\nSchemas: ${schemas.join("\n")}\n\n${meta}`
+    console.log(prompt)
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: `${prompt}`,
+        },
+      ],
+    });
 
-      return completion.choices[0].message.content;
+    return completion.choices[0].message.content;
   } catch (error) {
-      console.error('Error generating text:', error);
-      throw new Error('Failed to generate SQL query'); // Use throw to propagate the error
+    console.error('Error generating text:', error);
+    throw new Error('Failed to generate SQL query'); // Use throw to propagate the error
   }
 }
 
@@ -155,70 +154,65 @@ app.post('/login', async (req, res) => {
   res.json({ token });
 });
 
-app.get('/largeRegions', async (req, res) => {
-    const largeRegions = require('./geography_mapping.json');
-    res.json(largeRegions);
-});
-
 // Endpoint to fetch hierarchical geography options based on UTLA name
 app.get('/subregions', async (req, res) => {
   const { ltla } = req.query;
 
   if (!ltla) {
-      return res.status(400).json({ error: 'LTLA is required' });
+    return res.status(400).json({ error: 'LTLA is required' });
   }
 
   // SQL query to fetch msoa, lsoa, and oa based on ltla
   const sqlQuery = `
-      SELECT DISTINCT msoa, lsoa, oa
-      FROM geography_mappings 
-      WHERE ltla = $1;
+    SELECT DISTINCT msoa, lsoa, oa
+    FROM geography_mappings 
+    WHERE ltla = $1;
   `;
 
   try {
-      const result = await client.query(sqlQuery, [ltla]);
-      const nestedOptions = {};
+    const result = await client.query(sqlQuery, [ltla]);
+    const nestedOptions = {};
 
-      result.rows.forEach(row => {
-          if (!nestedOptions[row.msoa]) {
-              nestedOptions[row.msoa] = {};
+    result.rows.forEach(row => {
+      if (!nestedOptions[row.msoa]) {
+        nestedOptions[row.msoa] = {};
+      }
+      if (!nestedOptions[row.msoa][row.lsoa]) {
+        nestedOptions[row.msoa][row.lsoa] = {};
+      }
+      // Ensure that oa is not undefined or null before adding it
+      if (row.oa && !nestedOptions[row.msoa][row.lsoa][row.oa]) {
+        nestedOptions[row.msoa][row.lsoa][row.oa] = [];
+      }
+      // Only push oa if it exists
+      if (row.oa) {
+        nestedOptions[row.msoa][row.lsoa][row.oa].push(row.oa);
+      }
+    });
+
+    // Filter out any empty arrays at the most deeply nested layer
+    Object.keys(nestedOptions).forEach(msoa => {
+      Object.keys(nestedOptions[msoa]).forEach(lsoa => {
+        Object.keys(nestedOptions[msoa][lsoa]).forEach(oa => {
+          if (nestedOptions[msoa][lsoa][oa].length === 0) {
+            delete nestedOptions[msoa][lsoa][oa];
           }
-          if (!nestedOptions[row.msoa][row.lsoa]) {
-              nestedOptions[row.msoa][row.lsoa] = {};
-          }
-          // Ensure that oa is not undefined or null before adding it
-          if (row.oa && !nestedOptions[row.msoa][row.lsoa][row.oa]) {
-              nestedOptions[row.msoa][row.lsoa][row.oa] = [];
-          }
-          // Only push oa if it exists
-          if (row.oa) {
-              nestedOptions[row.msoa][row.lsoa][row.oa].push(row.oa);
-          }
+        });
+        // Clean up any empty lsoa objects
+        if (Object.keys(nestedOptions[msoa][lsoa]).length === 0) {
+          delete nestedOptions[msoa][lsoa];
+        }
       });
+      // Clean up any empty msoa objects
+      if (Object.keys(nestedOptions[msoa]).length === 0) {
+        delete nestedOptions[msoa];
+      }
+    });
 
-      // Filter out any empty arrays at the most deeply nested layer
-      Object.keys(nestedOptions).forEach(msoa => {
-          Object.keys(nestedOptions[msoa]).forEach(lsoa => {
-              Object.keys(nestedOptions[msoa][lsoa]).forEach(oa => {
-                  if (nestedOptions[msoa][lsoa][oa].length === 0) {
-                      delete nestedOptions[msoa][lsoa][oa];
-                  }
-              });
-              // Clean up any empty lsoa objects
-              if (Object.keys(nestedOptions[msoa][lsoa]).length === 0) {
-                  delete nestedOptions[msoa][lsoa];
-              }
-          });
-          // Clean up any empty msoa objects
-          if (Object.keys(nestedOptions[msoa]).length === 0) {
-              delete nestedOptions[msoa];
-          }
-      });
-
-      res.json(nestedOptions);
+    res.json(nestedOptions);
   } catch (error) {
-      console.error('Error executing SQL query:', error);
-      res.status(500).json({ error: 'Failed to execute query', details: error.message });
+    console.error('Error executing SQL query:', error);
+    res.status(500).json({ error: 'Failed to execute query', details: error.message });
   }
 });
 
@@ -226,23 +220,23 @@ app.get('/outputAreas', async (req, res) => {
   const { lsoa } = req.query;
 
   if (!lsoa) {
-      return res.status(400).json({ error: 'LSOA is required' });
+    return res.status(400).json({ error: 'LSOA is required' });
   }
 
   // SQL query to fetch ltla, lsoa, and lsoa based on utla
   const sqlQuery = `
-      SELECT DISTINCT oa 
-      FROM geography_mappings 
-      WHERE lsoa = $1;
+    SELECT DISTINCT oa 
+    FROM geography_mappings 
+    WHERE lsoa = $1;
   `;
   try {
     const result = await client.query(sqlQuery, [lsoa]);
     const outputAreas = result.rows.map(row => row.oa);
     res.json(outputAreas);
-} catch (error) {
+  } catch (error) {
     console.error('Error executing SQL query:', error);
     res.status(500).json({ error: 'Failed to execute query', details: error.message });
-}
+  }
 });
 
 app.get('/columnNames', async (req, res) => {
@@ -251,9 +245,9 @@ app.get('/columnNames', async (req, res) => {
 
   // SQL query to fetch distinct column names from the specified table
   const sqlQuery = `
-      SELECT DISTINCT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = $1;
+    SELECT DISTINCT column_name 
+    FROM information_schema.columns 
+    WHERE table_name = $1;
   `;
 
   try {
@@ -362,8 +356,12 @@ app.post('/llmQuery', async (req, res) => {
   }
 });
 
+app.get('*', (req, res) => {
+  console.log('Request received for', req.originalUrl);
+  res.sendFile(path.join(__dirname, '../build', 'index.html'));
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
