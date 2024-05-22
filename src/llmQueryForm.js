@@ -66,15 +66,17 @@ export default function LlmQueryForm({ setActiveTab }) {
     <div className="query-form">
       <form onSubmit={(e) => handlellmQuerySubmit(query, e)}>
         <div className="frame">
-          <h3>Ask the AI your question:</h3>
-          <input
-            type="text"
-            id="queryInput"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type your query in natural language"
-          />
-          <button type="submit">Search Database</button>
+          <h3>Ask the AI a specific question</h3>
+          <div className="query-input">
+            <input
+              type="text"
+              id="queryInput"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Type your query in natural language"
+            />
+            <button type="submit">Search Database</button>
+          </div>
           <div>
             <ul>
               {exampleQueries.map((exampleQuery, index) => (
@@ -86,7 +88,7 @@ export default function LlmQueryForm({ setActiveTab }) {
           </div>
         </div>
         <div className="frame">
-          <h3>See the response and query below:</h3>
+          <h3>See the response and query below</h3>
           <TableDisplay 
             data={llmQueryResult.data} 
             sqlQuery={llmQueryResult.sqlQuery} 

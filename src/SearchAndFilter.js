@@ -261,7 +261,7 @@ const SearchAndFilter = () => {
           </div>
         </div>
         <div className="frame">
-          <h3>Second, select the areas you need:</h3>
+          <h3>Second, select the geographic areas:</h3>
           <GeographySelector
             type="Country"
             items={Object.keys(largeRegions)}

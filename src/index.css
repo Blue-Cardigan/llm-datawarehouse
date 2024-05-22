@@ -172,13 +172,22 @@ label {
   border-radius: 5px;
 }
 
+.frame h3 {
+  position: relative;
+  padding: 10px; /* Adjusted padding for better spacing */
+  margin: -10px -10px 10px -10px;
+  background-color: #f0f0f0; /* Light gray background for highlight */
+  width: calc(100% + 20px); /* Adjust width to account for padding */
+  border-radius: 4px 4px 0px 0px;
+  color: #333;
+}
+
 .query-form {
   margin-bottom: 20px;
 }
 
 input[type="text"] {
   padding: 8px;
-  width: 500px; /* Set width of the input */
   margin: 10px; /* Space between input and button */
   border: 1px solid #555; /* Darker borders */
   background-color: #333; /* Dark input fields */
@@ -193,6 +202,20 @@ input[list="table-options"] {
   background-color: #333; /* Dark input fields */
   color: #fff; /* White text */
   border-radius: 4px; /* Rounded borders for the input */
+}
+.query-input {
+  display: flex; /* Set the query-input div as a flex container */
+  align-items: center; /* Align items vertically in the center */
+  width: 100%; /* Ensure it fills the container */
+}
+
+.query-input input[type="text"] {
+  flex-grow: 1; /* Allow the input to grow and fill available space */
+  margin-right: 10px; /* Add some space between the input and the button */
+}
+
+.query-input button {
+  white-space: nowrap; /* Prevent the button text from wrapping */
 }
 #queryInput {
   max-width: 100%;
