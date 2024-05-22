@@ -68,9 +68,7 @@ const SearchAndFilter = () => {
   const fetchCtryRgnLA = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/largeRegions`);
-      console.log(response)
       const data = await response.json();
-      console.log(data)
       setLargeRegions(data);
     } catch (error) {
       console.error('Failed to load geography mapping:', error);

@@ -3,37 +3,45 @@ import TableDisplay from './TableDisplay';
 
 export default function LlmQueryForm({ setActiveTab }) { 
   const [query, setQuery] = useState('');
+  const [llmQueryResult, setllmQueryResult] = useState({ data: [], sqlQuery: '', userQuestion: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [llmQueryResult, setllmQueryResult] = useState({ data: [], llmQuery: '', userllmQuery: '' });
-  
-  const handlellmQuerySubmit = async (llmQuery, e) => {
+
+  const handlellmQuerySubmit = async (query, e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoading(true); // Set isLoading to true immediately when the form is submitted
     setQuery('');
-    setActiveTab('llmQuery'); // Ensure the tab remains on LLM Query
-    if (llmQuery.trim()) {
-      setllmQueryResult(prevState => ({ ...prevState, userllmQuery: llmQuery }));
+    
+    setActiveTab('llmQuery');
+    if (query.trim()) {
+      setllmQueryResult(prevState => ({ ...prevState, userQuestion: query }));
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/llmQuery`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ query: llmQuery }),
+          body: JSON.stringify({ query: query }),
         });
 
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          const result = await response.json();
+          if (result.error) {
+            setllmQueryResult({ data: [result.error], sqlQuery: '', userQuestion: "Invalid question. Try again. Make sure you're specific" });
+          } else {
+            throw new Error('Network response was not ok');
+          }
         }
 
         const result = await response.json();
-        setllmQueryResult({ data: result.data, llmQuery: result.llmQuery, userllmQuery: llmQuery });
+        setllmQueryResult({ data: result.data, sqlQuery: result.sqlQuery, userQuestion: result.details });
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        setllmQueryResult({ data: [], llmQuery: '', userllmQuery: llmQuery });
+        setllmQueryResult({ data: [], sqlQuery: 'No query generated', userQuestion: query });
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Set isLoading to false once the data fetching process is complete
       }
+    } else {
+      setIsLoading(false); // Ensure isLoading is set to false if no query is submitted
     }
   };
 
@@ -66,6 +74,7 @@ export default function LlmQueryForm({ setActiveTab }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Type your query in natural language"
           />
+          <button type="submit">Search Database</button>
           <div>
             <ul>
               {exampleQueries.map((exampleQuery, index) => (
@@ -78,12 +87,11 @@ export default function LlmQueryForm({ setActiveTab }) {
         </div>
         <div className="frame">
           <h3>See the response and query below:</h3>
-          <button type="submit">Search Database</button>
           <TableDisplay 
             data={llmQueryResult.data} 
-            query={llmQueryResult.llmQuery} 
-            userQuery={llmQueryResult.userllmQuery} 
-            isLoading={isLoading} 
+            sqlQuery={llmQueryResult.sqlQuery} 
+            userQuestion={llmQueryResult.userQuestion} 
+            isLoading={isLoading}
           />
         </div>
       </form>

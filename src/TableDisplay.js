@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-function TableDisplay({ data, query, userQuery, isLoading }) {
+function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   const [showQuery, setShowQuery] = useState(false);
+
   if (!data || data.length === 0) {
     return null;
   }
@@ -63,7 +64,7 @@ function TableDisplay({ data, query, userQuery, isLoading }) {
     <div>
       <h2>Results</h2>
       <div className="user-query-display">
-        {userQuery}
+        {userQuestion}
       </div>
       {data && data.length > 0 && (
         <>
@@ -77,7 +78,7 @@ function TableDisplay({ data, query, userQuery, isLoading }) {
       )}
       {showQuery && (
         <div className="query-display">
-          <pre>{query}</pre>
+          <pre>{sqlQuery}</pre>
         </div>
       )}
       <div className="table-container">

@@ -39,7 +39,7 @@ function App() {
           onClick={() => setActiveTab('llmQuery')}
         >
           <div>LLM Query</div>
-          <span className="tab-subtext">Explore datasets using LLM-based queries. Use this method if you have a question and want to see what data is available.</span>
+          <span className="tab-subtext">Ask more detailed questions across multiple datasets using LLM-based queries. Use this method if you have a specific question and already know what data is available.</span>
         </button>
       </div>
       {activeTab === 'search' ? (

@@ -8,6 +8,7 @@ const { OpenAI } = require("openai");
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
+process.env.OPENAI_API_KEY = 'sk-proj-ZoaaVV0YvbIKJXwteiNDT3BlbkFJ04nNFE005MpoksRMN7TS';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -60,8 +61,8 @@ async function returnSchemas(query) {
     descriptionsText += `${key}: ${description}\n`;
   }
 
-  const prompt = `Select the relevant dataset titles using the descriptions below, that can be used to answer the provided query. Return only the dataset titles as a comma separated list, without descriptions. \n\n${query}\n\n${descriptionsText}`;
-  console.log(prompt);
+  const prompt = `Select the relevant dataset codes using the descriptions below, that can be used to answer the provided query. Return only the dataset codes as a comma separated list, without descriptions. \n\nQuery: ${query}\n\nDataset Codes with Descriptions:\n${descriptionsText}`;
+  console.log("selecting datasets");
 
   try {
     const completion = await openai.chat.completions.create({
@@ -77,14 +78,35 @@ async function returnSchemas(query) {
     const regex = /TS\d+[A-Z]?/g;
     const matches = completion.choices[0].message.content.match(regex);
     const dataset_list = matches ? matches.map(title => title.trim().toLowerCase().replace(/\s/g, '')) : [];
-      
-    const queryText = 'SELECT schema_description FROM schema_descriptions WHERE directory_name = ANY($1)';
-    const schemaDescriptions = await client.query(queryText, [dataset_list]);
-    console.log(`Dataset_list: ${dataset_list}`);  
-    console.log(`Query: ${queryText}`);
-    console.log(`Rows: ${schemaDescriptions.rows}`);
 
-    return schemaDescriptions.rows.map(row => row.schema_description);
+    // Map dataset_list items to their correct table names
+    const tableNames = dataset_list.map(dataset => `census2021-${dataset.toLowerCase()}-ctry`);
+    // Query for column names, datatype, and the first row item as an example
+    let schemaDescriptions = [];
+    for (const tableName of tableNames) {
+      // Fetch column names and data types
+      const queryText = `
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = $1 AND column_name != 'id';
+      `;
+      const result = await client.query(queryText, [tableName]);
+    
+      // For each column, fetch an example value
+      const descriptions = await Promise.all(result.rows.map(async (row) => {
+        const exampleQuery = `SELECT "${row.column_name}" FROM "${tableName}" LIMIT 1;`;
+        const exampleResult = await client.query(exampleQuery);
+        const exampleValue = exampleResult.rows.length > 0 ? exampleResult.rows[0][row.column_name] : 'No data';
+        return `${row.column_name} (${row.data_type}) | Example value: ${exampleValue}`;
+      }));
+    
+      const description = descriptions.join('\n');
+      const datasetKey = tableName.replace('census2021-', '').replace('-ctry', '');
+      const datasetDescription = datasetDescriptions[datasetKey.toUpperCase()];
+      schemaDescriptions.push(`*${datasetKey} - ${datasetDescription}:*\n${description}\n\n`);
+    }
+
+    return schemaDescriptions;
   } catch (error) {
     console.error('Error generating text:', error);
     throw new Error('Failed to generate SQL query'); // Changed to throw to propagate the error correctly
@@ -96,8 +118,27 @@ async function convertToSQL(query, schemas) {
   try {
     // Load meta.txt asynchronously
     const meta = await fs.promises.readFile(path.join(__dirname, 'meta.txt'), 'utf8');
-    const prompt = `Rephrase the provided statement into a PostgreSQL query that can be run against a database with the schema below. Return only the SQL query as a string. \n\nStatement: ${query}\n\nSchemas: ${schemas.join("\n")}\n\n${meta}`
-    console.log(prompt)
+    const prompt = `Use the provided question to write an SQL query for a PostgreSQL database using the schema(s) and Geography Codes below. 
+    - Return only the SQL query as a string. 
+    - Ensure to match the column name exactly. 
+    - Wrap column names in double quotes.
+    - Always include "geography" and "geography_code", even if they are not explicitly mentioned in the statement. 
+    - If the question is not valid, return "invalid question".
+    
+    ###Question###
+    ${query}
+    ###
+    
+    ###Schemas###
+    ${schemas.join("\n")}
+    
+    ###Geography Codes###
+    ${meta}   
+
+    Use the {table code}-{geography code} pair in your query, for example "ts0001-oa", "ts0002-ltla" etc.
+    ###
+    `
+    console.log("Generating SQL query");
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -267,7 +308,6 @@ app.get('/columnNames', async (req, res) => {
 
 app.post('/paramQuery', async (req, res) => {
   const { selectedTable, geography, columns } = req.body;
-  console.log(geography);
 
   // Replace 'country' and 'region' with 'ctry' and 'rgn' respectively in the geography type
   const geographyType = geography.type.replace('country', 'ctry').replace('region', 'rgn');
@@ -304,7 +344,6 @@ app.post('/paramQuery', async (req, res) => {
       });
       return transformedRow;
     });
-    console.log(transformedResults);
     
     res.json({ query: sqlQuery, data: transformedResults });
   } catch (error) {
@@ -320,39 +359,83 @@ app.post('/llmQuery', async (req, res) => {
   }
 
   let sqlQuery = "";
+  let attempt = 0;
+  const maxAttempts = 2;
 
-  try {
-    const columnNameMappings = await mapOriginalToHashed();
-    const schemas = await returnSchemas(query);
-    sqlQuery = await convertToSQL(query, schemas);
+  const columnNameMappings = await mapOriginalToHashed();
+  const schemas = await returnSchemas(query);
+  sqlQuery = await convertToSQL(query, schemas);
+  sqlQuery = sqlQuery.replace(/```sql/g, '').replace(/```/g, '').trim();
+  sqlQuery = sqlQuery.replace(/^"(.*)"$/, '$1');
+  if (sqlQuery.toLowerCase().includes("invalid question")) {
+    res.status(400).json({ error: 'Invalid question' });
+    return;
+  }
 
-    // Replace short table names with full names
-    Object.keys(tableNameMappings).forEach(shortName => {
-      const fullName = `${tableNameMappings[shortName]}`;
-      sqlQuery = sqlQuery.replace(new RegExp(`\\b${shortName}\\b`, 'g'), fullName);
-    });
+  // Replace short table names with full names
+  Object.keys(tableNameMappings).forEach(shortName => {
+    const fullName = `${tableNameMappings[shortName]}`;
+    sqlQuery = sqlQuery.replace(new RegExp(`\\b${shortName}\\b`, 'g'), fullName);
+  });
 
-    // Replace long column names with hashed names
-    Object.keys(columnNameMappings).forEach(originalName => {
-      const hashedName = columnNameMappings[originalName];
-      sqlQuery = sqlQuery.replace(new RegExp(`\\b${originalName}\\b`, 'g'), hashedName);
-    });
+  // Replace long column names with hashed names
+  Object.keys(columnNameMappings).forEach(originalName => {
+    const hashedName = `${columnNameMappings[originalName]}`;
+    sqlQuery = sqlQuery.replace(new RegExp(`\\b${originalName}\\b`, 'g'), hashedName);
+  });
 
-    sqlQuery = sqlQuery.replace(/```sql/g, '').replace(/```/g, '').trim();
-    sqlQuery = sqlQuery.replace(/^"(.*)"$/, '$1');
+  let dbResponse;
+  // if dbresponse returns an error, return the error
+  while (attempt < maxAttempts) {
+    try {
+      dbResponse = await client.query(sqlQuery);
 
-    console.log('Generated SQL Query:', sqlQuery);
-    const dbResponse = await client.query(sqlQuery);
-    res.json({ data: dbResponse.rows, query: sqlQuery });
-  } catch (error) {
-    console.error('Error processing request:', error);
-    if (error.response) {
-      res.status(500).json({ query: sqlQuery, error: 'OpenAI API error', details: error.response });
-    } else if (error.code === 'ECONNREFUSED') {
-      res.status(500).json({ query: sqlQuery, error: 'Database connection error', details: error.message });
-    } else {
-      res.status(500).json({ query: sqlQuery, error: 'Internal server error', details: error.message });
+      const transformedData = dbResponse.rows.map(row => {
+        const transformedRow = {};
+        Object.keys(row).forEach(key => {
+          const transformedKey = key.replace(/_/g, ' ');
+          transformedRow[transformedKey] = row[key];
+        });
+        return transformedRow;
+      });
+      console.log('Generated SQL Query:', sqlQuery);
+      res.json({ data: transformedData, sqlQuery: sqlQuery });
+      return
+    } catch (error) {
+      console.error('Error executing SQL query:', error);
+      attempt++;
+      if (attempt >= maxAttempts) {
+        res.status(500).json({ error: 'Failed to execute SQL query after multiple attempts', sqlQuery: sqlQuery, details: error.message });
+        return; // Exit after max attempts
+      }
+      const prompt = `Correct the provided SQL query based on the provided error. 
+        - Return only the SQL query as a string. 
+        - Wrap column names in double quotes.
+        
+        SQL Query: ${sqlQuery}
+        Error: ${error}`    
+        console.log(`Error, reprompting: ${prompt}`)
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "user",
+              content: `${prompt}`,
+            },
+          ],
+        });
+      sqlQuery = completion.choices[0].message.content;
+      attempt++;
     }
+  // } catch (error) {
+  //   console.error('Error processing request:', error);
+  //   if (error.response) {
+  //     res.status(500).json({ query: sqlQuery, error: 'OpenAI API error', details: error.response });
+  //   } else if (error.code === 'ECONNREFUSED') {
+  //     res.status(500).json({ query: sqlQuery, error: 'Database connection error', details: error.message });
+  //   } else {
+  //     res.status(500).json({ query: sqlQuery, error: 'Internal server error', details: error.message });
+  //   }
   }
 });
 
