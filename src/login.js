@@ -1,4 +1,3 @@
-// Login.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -11,7 +10,8 @@ function Login({ setLoginState }) {
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { username, password });
       localStorage.setItem('token', response.data.token);
-      setLoginState(true);
+      localStorage.setItem('username', username);  // Store username in localStorage
+      setLoginState(true, username);
     } catch (error) {
       alert('Invalid username or password');
     }

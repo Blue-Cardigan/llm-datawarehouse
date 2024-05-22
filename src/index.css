@@ -12,13 +12,6 @@ body {
   line-height: 1.6;
 }
 
-/* Main container styling */
-#root {
-  padding: 20px;
-  max-width: 1200px;
-  margin: auto;
-}
-
 /* Table styling */
 table {
   width: 100%;
@@ -36,6 +29,68 @@ th, td {
 
 th {
   background-color: #333; /* Dark header cells */
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #2a2c2e;
+  color: #fff;
+}
+
+.logo {
+  width: 50px;
+  height: auto;
+  margin-right: 10px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.username {
+  margin-right: 10px;
+}
+
+.profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.secondary-header {
+  display: flex;
+  justify-content: center;
+  background-color: #333;
+  padding: 10px 0;
+}
+
+.tertiary-header {
+  text-align: center;
+  padding: 10px;
+  background-color: #444; /* Slightly lighter than the secondary header for contrast */
+  color: #fff;
+}
+
+.tab-subtext {
+  font-size: 16px; /* Adjust font size as needed */
+  color: #ccc; /* Lighter color for readability */
+}
+
+.tab-button {
+  margin: 0 10px;
+  padding: 10px 20px;
+}
+
+/* Ensure the content area is clear of the headers */
+.content {
+  padding: 20px;
+  min-height: 80vh; /* Adjust based on actual content needs */
+  max-width: 60vw;
+  margin: auto;
 }
 
 /* Header styling */
@@ -75,24 +130,24 @@ label {
   margin-bottom: 20px;
 }
 
-.tab-button {
-  width: 450px; /* Set a fixed width */
-  height: 450px; /* Set a fixed height to make it square */
-  padding: 5px; /* Remove padding to maintain the square shape */
+/* .tab-button {
+  width: 450px;
+  height: 450px;
+  padding: 5px;
   margin: 0 5px;
   border: none;
-  background-color: #333; /* Darker buttons */
-  color: #fff; /* White text */
+  background-color: #333;
+  color: #fff;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  font-size: 24px; /* Increase font size for larger buttons */
-  text-align: center; /* Center text horizontally */
-  line-height: 1.2; /* Adjust line height for better text spacing */
+  font-size: 24px;
+  text-align: center;
+  line-height: 1.2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-}
+} */
 
 .tab-subtext {
   font-size: 18px; /* Smaller font size for subtext */
