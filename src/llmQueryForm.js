@@ -3,14 +3,14 @@ import TableDisplay from './TableDisplay';
 
 export default function LlmQueryForm({ setActiveTab }) { 
   const [query, setQuery] = useState('');
-  const [llmQueryResult, setllmQueryResult] = useState({ data: [], sqlQuery: '', userQuestion: '' });
+  const [llmQueryResult, setllmQueryResult] = useState({ data: [], sqlQuery: '', userQuestion: '', errorMessage: '' });
   const [isLoading, setIsLoading] = useState(false);
 
   const handlellmQuerySubmit = async (query, e) => {
     e.preventDefault();
-    setIsLoading(true); // Set isLoading to true immediately when the form is submitted
-    setQuery('');
-    
+    setIsLoading(true);
+    setllmQueryResult(prevState => ({ ...prevState, errorMessage: '' })); // Clear previous errors
+
     setActiveTab('llmQuery');
     if (query.trim()) {
       setllmQueryResult(prevState => ({ ...prevState, userQuestion: query }));
@@ -26,22 +26,36 @@ export default function LlmQueryForm({ setActiveTab }) {
         if (!response.ok) {
           const result = await response.json();
           if (result.error) {
-            setllmQueryResult({ data: [result.error], sqlQuery: '', userQuestion: "Invalid question. Try again. Make sure you're specific" });
+            setllmQueryResult(prevState => ({
+              ...prevState,
+              data: [],
+              sqlQuery: '',
+              errorMessage: result.error || "Invalid question. Try again. Make sure you're specific"
+            }));
           } else {
             throw new Error('Network response was not ok');
           }
+        } else {
+          const result = await response.json();
+          setllmQueryResult({ data: result.data, sqlQuery: result.sqlQuery, userQuestion: result.details, errorMessage: '' });
         }
-
-        const result = await response.json();
-        setllmQueryResult({ data: result.data, sqlQuery: result.sqlQuery, userQuestion: result.details });
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        setllmQueryResult({ data: [], sqlQuery: 'No query generated', userQuestion: query });
+        setllmQueryResult(prevState => ({
+          ...prevState,
+          data: [],
+          sqlQuery: '',
+          errorMessage: 'Failed to fetch data. Please check your network connection and try again.'
+        }));
       } finally {
-        setIsLoading(false); // Set isLoading to false once the data fetching process is complete
+        setIsLoading(false);
       }
     } else {
-      setIsLoading(false); // Ensure isLoading is set to false if no query is submitted
+      setIsLoading(false);
+      setllmQueryResult(prevState => ({
+        ...prevState,
+        errorMessage: 'Please enter a query before submitting.'
+      }));
     }
   };
 
@@ -60,6 +74,7 @@ export default function LlmQueryForm({ setActiveTab }) {
 
   const handleExampleQueryClick = (query) => {
     setQuery(query);
+    setllmQueryResult(prevState => ({ ...prevState, errorMessage: '' })); // Clear errors when a new example is clicked
   };
 
   return (
@@ -77,6 +92,11 @@ export default function LlmQueryForm({ setActiveTab }) {
             />
             <button type="submit">Search Database</button>
           </div>
+          {llmQueryResult.errorMessage && (
+            <div className="error-message">
+              {llmQueryResult.errorMessage}
+            </div>
+          )}
           <div>
             <ul>
               {exampleQueries.map((exampleQuery, index) => (

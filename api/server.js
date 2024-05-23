@@ -123,7 +123,7 @@ async function convertToSQL(query, schemas) {
     - Ensure to match the column name exactly. 
     - Wrap column names in double quotes.
     - Always include "geography" and "geography_code", even if they are not explicitly mentioned in the statement. 
-    - If the question is not valid, return "invalid question".
+    - If the question doesn't make sense or doesn't relate to the schemas, simply return "invalid question".
     
     ###Question###
     ${query}
@@ -148,6 +148,11 @@ async function convertToSQL(query, schemas) {
         },
       ],
     });
+
+    if (completion.choices[0].message.content.includes("invalid question")) {
+      console.log("invalid question");
+      return "Invalid question, try to be specific.";
+    }
 
     return completion.choices[0].message.content;
   } catch (error) {
@@ -362,80 +367,74 @@ app.post('/llmQuery', async (req, res) => {
   let attempt = 0;
   const maxAttempts = 2;
 
-  const columnNameMappings = await mapOriginalToHashed();
-  const schemas = await returnSchemas(query);
-  sqlQuery = await convertToSQL(query, schemas);
-  sqlQuery = sqlQuery.replace(/```sql/g, '').replace(/```/g, '').trim();
-  sqlQuery = sqlQuery.replace(/^"(.*)"$/, '$1');
-  if (sqlQuery.toLowerCase().includes("invalid question")) {
-    res.status(400).json({ error: 'Invalid question' });
-    return;
-  }
-
-  // Replace short table names with full names
-  Object.keys(tableNameMappings).forEach(shortName => {
-    const fullName = `${tableNameMappings[shortName]}`;
-    sqlQuery = sqlQuery.replace(new RegExp(`\\b${shortName}\\b`, 'g'), fullName);
-  });
-
-  // Replace long column names with hashed names
-  Object.keys(columnNameMappings).forEach(originalName => {
-    const hashedName = `${columnNameMappings[originalName]}`;
-    sqlQuery = sqlQuery.replace(new RegExp(`\\b${originalName}\\b`, 'g'), hashedName);
-  });
-
-  let dbResponse;
-  // if dbresponse returns an error, return the error
-  while (attempt < maxAttempts) {
-    try {
-      dbResponse = await client.query(sqlQuery);
-
-      const transformedData = dbResponse.rows.map(row => {
-        const transformedRow = {};
-        Object.keys(row).forEach(key => {
-          const transformedKey = key.replace(/_/g, ' ');
-          transformedRow[transformedKey] = row[key];
-        });
-        return transformedRow;
-      });
-      console.log('Generated SQL Query:', sqlQuery);
-      res.json({ data: transformedData, sqlQuery: sqlQuery });
-      return
-    } catch (error) {
-      console.error('Error executing SQL query:', error);
-      attempt++;
-      if (attempt >= maxAttempts) {
-        res.status(500).json({ error: 'Failed to execute SQL query after multiple attempts', sqlQuery: sqlQuery, details: error.message });
-        return; // Exit after max attempts
-      }
-      const prompt = `Correct the provided SQL query based on the provided error. 
-        - Return only the SQL query as a string. 
-        - Wrap column names in double quotes.
-        
-        SQL Query: ${sqlQuery}
-        Error: ${error}`    
-        console.log(`Error, reprompting: ${prompt}`)
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "user",
-              content: `${prompt}`,
-            },
-          ],
-        });
-      sqlQuery = completion.choices[0].message.content;
-      attempt++;
+  try {
+    const columnNameMappings = await mapOriginalToHashed();
+    const schemas = await returnSchemas(query);
+    sqlQuery = await convertToSQL(query, schemas);
+    sqlQuery = sqlQuery.replace(/```sql/g, '').replace(/```/g, '').trim();
+    sqlQuery = sqlQuery.replace(/^"(.*)"$/, '$1');
+    if (sqlQuery.toLowerCase().includes("invalid question")) {
+      res.status(400).json({ error: 'Invalid question' });
+      return;
     }
-  // } catch (error) {
-  //   console.error('Error processing request:', error);
-  //   if (error.response) {
-  //     res.status(500).json({ query: sqlQuery, error: 'OpenAI API error', details: error.response });
-  //   } else if (error.code === 'ECONNREFUSED') {
-  //     res.status(500).json({ query: sqlQuery, error: 'Database connection error', details: error.message });
-  //   } else {
-  //     res.status(500).json({ query: sqlQuery, error: 'Internal server error', details: error.message });
-  //   }
+
+    // Replace short table names with full names
+    Object.keys(tableNameMappings).forEach(shortName => {
+      const fullName = `${tableNameMappings[shortName]}`;
+      sqlQuery = sqlQuery.replace(new RegExp(`\\b${shortName}\\b`, 'g'), fullName);
+    });
+
+    // Replace long column names with hashed names
+    Object.keys(columnNameMappings).forEach(originalName => {
+      const hashedName = `${columnNameMappings[originalName]}`;
+      sqlQuery = sqlQuery.replace(new RegExp(`\\b${originalName}\\b`, 'g'), hashedName);
+    });
+
+    // if dbresponse returns an error, return the error
+    while (attempt < maxAttempts) {
+      try {
+        const dbResponse = await client.query(sqlQuery);
+        const transformedData = dbResponse.rows.map(row => {
+          const transformedRow = {};
+          Object.keys(row).forEach(key => {
+            const transformedKey = key.replace(/_/g, ' ');
+            transformedRow[transformedKey] = row[key];
+          });
+          return transformedRow;
+        });
+        console.log('Generated SQL Query:', sqlQuery);
+        res.json({ data: transformedData, sqlQuery: sqlQuery });
+        return
+      } catch (error) {
+        console.error('Error executing SQL query:', error);
+        attempt++;
+        if (attempt >= maxAttempts) {
+          res.status(500).json({ error: 'Failed to execute SQL query after multiple attempts', sqlQuery: sqlQuery, details: error.message });
+          return; // Exit after max attempts
+        }
+        const prompt = `Correct the provided SQL query based on the provided error. 
+          - Return only the SQL query as a string. 
+          - Wrap column names in double quotes.
+          
+          SQL Query: ${sqlQuery}
+          Error: ${error}`    
+          console.log(`Error, reprompting: ${prompt}`)
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "user",
+                content: `${prompt}`,
+              },
+            ],
+          });
+        }
+        sqlQuery = completion.choices[0].message.content;
+        attempt++;
+      }
+    } catch (error) {
+    console.error('Error processing LLM query:', error);
+    res.status(500).json({ error: 'Internal server error during query processing', details: error.message });
   }
 });
 

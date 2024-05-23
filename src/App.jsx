@@ -49,7 +49,7 @@ function App() {
     <div className="App">
       <header className="app-header">
         <div className="app-title">
-          <img src="/logo.png" alt="App Logo" className="logo" />
+          <img src="/logolight.png" alt="App Logo" className="logo" />
           <h1>Asylum Data Query Interface</h1>
         </div>
         <div className="user-info">
