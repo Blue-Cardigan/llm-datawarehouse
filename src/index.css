@@ -172,8 +172,24 @@ th {
   margin-bottom: 20px;
 }
 
+.column-select {
+  display: flex;
+  align-items: flex-start;
+}
+
+.column-select, label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 10px;
+}
+
 .select-all-btn {
   margin-bottom: 10px;
+}
+
+.column-select-all-btn {
+  margin-top: 70px;
 }
 
 .query-form {
@@ -181,7 +197,7 @@ th {
 }
 
 input[type="text"], .table-input, .dropdown {
-  width: 100%;
+  width: 300%;
   padding: 12px;
   margin: 10px 0;
   border: 2px solid #555;
@@ -189,6 +205,38 @@ input[type="text"], .table-input, .dropdown {
   color: #fff;
   border-radius: 2px;
   font-weight: bold;
+}
+
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.dropdown-options {
+  position: absolute;
+  width: 200%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 10;
+}
+
+.dropdown-option {
+  padding: 8px;
+  cursor: pointer;
+  color: #333;
+}
+
+.dropdown-option:hover {
+  background: #f0f0f0;
 }
 
 .query-input {
@@ -221,7 +269,7 @@ button {
   background-color: #4e3c85;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -232,7 +280,7 @@ button.selected {
 }
 
 button:hover {
-  background-color: #8d80b5;
+  background-color: #9f9fa0;
 }
 
 .select-all-btn {

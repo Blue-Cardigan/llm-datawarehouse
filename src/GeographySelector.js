@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const GeographySelector = ({ type, items, selectedItems, handleClick, handleSelectAll }) => (
   <div>
-    <h2>{type}</h2>
+    <h4>{type}</h4>
     {items.map((item) => (
       <button
         type="button"

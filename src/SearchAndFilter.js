@@ -4,6 +4,7 @@ import TableDisplay from './TableDisplay';
 import useFetchData from './hooks/useFetchData';
 import useFormState from './hooks/useFormState';
 import GeographySelector from './GeographySelector';
+import CustomDropdown from './CustomDropdown';
 import './index.css'; 
 
 const SearchAndFilter = () => {
@@ -111,71 +112,125 @@ const SearchAndFilter = () => {
     }
   };
 
+  const tableOptions = Object.entries(tableDetails).map(([code, details]) => ({
+    code,
+    name: details.name,
+  }));
+
+  const preprocessColumnNames = (columns) => {
+    if (columns.length === 0) return columns;
+
+    const excludeColumns = ['date', 'geography', 'geography code', 'id'];
+    const filteredColumns = columns.filter(
+      (col) => !excludeColumns.includes(col.trim().toLowerCase())
+    );
+
+    const findCommonPrefix = (strings) => {
+      if (strings.length === 0) return '';
+      let prefix = strings[0];
+      for (let i = 1; i < strings.length; i++) {
+        while (strings[i].indexOf(prefix) !== 0) {
+          prefix = prefix.substring(0, prefix.length - 1);
+          if (prefix.length === 0) return '';
+        }
+      }
+      return prefix;
+    };
+
+    const findCommonSuffix = (strings) => {
+      if (strings.length === 0) return '';
+      let suffix = strings[0];
+      for (let i = 1; i < strings.length; i++) {
+        while (!strings[i].endsWith(suffix)) {
+          suffix = suffix.substring(1);
+          if (suffix.length === 0) return '';
+        }
+      }
+      return suffix;
+    };
+
+    const commonPrefix = findCommonPrefix(filteredColumns);
+    const commonSuffix = findCommonSuffix(filteredColumns);
+
+    const tableName = formData.selectedTable ? tableDetails[formData.selectedTable].name : '';
+
+    return columns.map((col) => {
+      let newCol = col.replace(/; measures: Value$/, '').trim();
+      if (commonPrefix.length > 5) {
+        newCol = newCol.replace(commonPrefix, '').trim();
+      }
+      if (commonSuffix.length > 5) {
+        newCol = newCol.replace(new RegExp(`${commonSuffix}$`), '').trim();
+      }
+      if (tableName) {
+        newCol = newCol.replace(new RegExp(`^${tableName}`, 'i'), '').trim();
+      }
+      newCol = newCol.replace(/;|:/g, '').trim();
+      newCol = newCol.replace(/[\s;:]*measures[\s;:]*Value[\s;:]*/gi, '').trim();
+      newCol = newCol.replace(/measures$/i, '').trim();
+      return newCol;
+    });
+  };
+
+  const processedColumnNames = preprocessColumnNames(columnNames || []);
+  console.log(processedColumnNames);
+
   return (
     <div className="search-and-filter">
       <form onSubmit={handleSubmit}>
-        <div className="frame">
-          <div className="left-column">
-            <div className="section-header">
-              <h3>Select the Data</h3>
-            </div>
-            <button type="button" className="select-all-btn button" onClick={handleSelectAllColumns}>
+      <div className="frame">
+        <div className="left-column">
+          <div className="section-header">
+            <h3>Select the Data</h3>
+          </div>
+          {formData.selectedTable && (
+            <button type="button" className="column-select-all-btn select-all-btn button" onClick={handleSelectAllColumns}>
               {columnNames && selectedColumns.length === columnNames.length ? 'Deselect All' : 'Select All'}
             </button>
-          </div>
-          <div className="right-column">
-            <div className="section-content">
-              <div className="table-select">
-                <label>
-                  <input
-                    list="table-options"
-                    type="text"
-                    name="selectedTable"
-                    value={formData.selectedTable}
-                    onChange={handleChange}
-                    placeholder="Search Datasets"
-                    className="table-input"
-                  />
-                  <datalist id="table-options">
-                    {Object.entries(tableDetails)
-                      .sort((a, b) => a[1].name.localeCompare(b[1].name))
-                      .map(([code, details]) => (
-                        <option key={code} value={code}>
-                          {details.name}
-                        </option>
-                      ))}
-                  </datalist>
-                </label>
-              </div>
-              <div className="column-select">
-                {columnNames && columnNames.length > 0 && (
-                  <div>
-                    <label>Columns:</label>
-                    {columnNames
+          )}
+        </div>
+        <div className="right-column">
+          <div className="section-content">
+            <div className="table-select">
+              <label>
+                <CustomDropdown
+                  options={tableOptions}
+                  value={formData.selectedTable}
+                  onChange={handleChange}
+                  placeholder="Search Datasets"
+                />
+              </label>
+            </div>
+            <div className="column-select">
+              {processedColumnNames.length > 0 && (
+                <div>
+                  <label><h4>Columns:</h4></label>
+                  <div className="column-buttons">
+                    {processedColumnNames
                       .filter((columnName) => {
                         const excludeColumns = ['date', 'geography', 'geography code', 'id'];
                         return !excludeColumns.includes(columnName.trim().toLowerCase());
                       })
-                      .map((columnName) => {
-                        const tableDetailsName = tableDetails[formData.selectedTable]?.name || '';
-                        const cleanColumnName = columnName.replace(new RegExp(`^${tableDetailsName}:?`, 'i'), '').trim();
+                      .map((processedColumnName, index) => {
+                        const originalColumnName = columnNames[index];
                         return (
                           <button
-                            className={selectedColumns.includes(columnName) ? 'selected' : ''}
+                            className={selectedColumns.includes(originalColumnName) ? 'selected' : ''}
                             type="button"
-                            key={columnName}
-                            onClick={() => handleColumnSelection(columnName)}
+                            key={originalColumnName}
+                            onClick={() => handleColumnSelection(originalColumnName)}
                           >
-                            {cleanColumnName}
+                            {processedColumnName}
                           </button>
                         );
                       })}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+      </div>
         {formData.selectedTable && (
           <>
             <hr />
