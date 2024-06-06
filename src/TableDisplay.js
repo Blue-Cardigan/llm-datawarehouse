@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   const [showQuery, setShowQuery] = useState(false);
 
+  // Define columns to exclude
+  const excludedColumns = ['id', 'Counting'];
+
   if (!data || data.length === 0) {
     return null;
   }
@@ -10,9 +13,11 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   // Function to render table headers
   const renderTableHeader = () => {
     if (data.length > 0) {
-      return Object.keys(data[0]).map((key, index) => {
-        return <th key={index}>{key.toUpperCase()}</th>;
-      });
+      return Object.keys(data[0])
+        .filter(key => !excludedColumns.includes(key))
+        .map((key, index) => {
+          return <th key={index}>{key.toUpperCase()}</th>;
+        });
     }
   };
 
@@ -21,9 +26,11 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
     return data.map((row, index) => {
       return (
         <tr key={index}>
-          {Object.values(row).map((cell, idx) => {
-            return <td key={idx}>{cell}</td>;
-          })}
+          {Object.entries(row)
+            .filter(([key, _]) => !excludedColumns.includes(key))
+            .map(([key, cell], idx) => {
+              return <td key={idx}>{cell}</td>;
+            })}
         </tr>
       );
     });
@@ -37,7 +44,7 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   // Function to convert data to CSV and trigger download
   const downloadCSV = () => {
     const csvRows = [];
-    const headers = Object.keys(data[0]);
+    const headers = Object.keys(data[0]).filter(key => !excludedColumns.includes(key));
     csvRows.push(headers.join(',')); // Add header row
 
     for (const row of data) {
