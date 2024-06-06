@@ -53,7 +53,7 @@ app.get('/largeRegions', (req, res) => {
 async function returnSchemas(query) {
   const datasetsPath = path.join(__dirname, 'datasets.json');
   const datasetsJson = JSON.parse(fs.readFileSync(datasetsPath, 'utf8'));
-  const datasetDescriptions = datasetsJson.datasets; // Access the 'datasets' property of the JSON object
+  const datasetDescriptions = datasetsJson.EW; // Access the 'datasets' property of the JSON object
 
   // Format the dataset descriptions into a readable string
   let descriptionsText = "";
@@ -88,7 +88,7 @@ async function returnSchemas(query) {
       const queryText = `
         SELECT column_name, data_type
         FROM information_schema.columns
-        WHERE table_name = $1 AND column_name != 'id';
+        WHERE table_name = $1;
       `;
       const result = await client.query(queryText, [tableName]);
     
@@ -200,62 +200,70 @@ app.post('/login', async (req, res) => {
   res.json({ token });
 });
 
-// Endpoint to fetch hierarchical geography options based on UTLA name
 app.get('/subregions', async (req, res) => {
-  const { ltla } = req.query;
+  const { ltla, region } = req.query;
 
-  if (!ltla) {
-    return res.status(400).json({ error: 'LTLA is required' });
+  if (!ltla && !region) {
+    return res.status(400).json({ error: 'LTLA or region is required' });
   }
 
-  // SQL query to fetch msoa, lsoa, and oa based on ltla
-  const sqlQuery = `
-    SELECT DISTINCT msoa, lsoa, oa
-    FROM geography_mappings 
-    WHERE ltla = $1;
-  `;
+  let sqlQuery;
+  let queryParams;
+
+  if (region) {
+    // SQL query to fetch unique iz_nm and oa based on region
+    sqlQuery = `
+      SELECT DISTINCT iz_nm, oa
+      FROM geography_mappings
+      WHERE ca_nm = $1;
+    `;
+    queryParams = [region];
+  } else {
+    // SQL query to fetch msoa, lsoa, and oa based on ltla
+    sqlQuery = `
+      SELECT DISTINCT msoa, lsoa, oa
+      FROM geography_mappings 
+      WHERE ltla = $1;
+    `;
+    queryParams = [ltla];
+  }
 
   try {
-    const result = await client.query(sqlQuery, [ltla]);
-    const nestedOptions = {};
+    const result = await client.query(sqlQuery, queryParams);
 
-    result.rows.forEach(row => {
-      if (!nestedOptions[row.msoa]) {
-        nestedOptions[row.msoa] = {};
-      }
-      if (!nestedOptions[row.msoa][row.lsoa]) {
-        nestedOptions[row.msoa][row.lsoa] = {};
-      }
-      // Ensure that oa is not undefined or null before adding it
-      if (row.oa && !nestedOptions[row.msoa][row.lsoa][row.oa]) {
-        nestedOptions[row.msoa][row.lsoa][row.oa] = [];
-      }
-      // Only push oa if it exists
-      if (row.oa) {
-        nestedOptions[row.msoa][row.lsoa][row.oa].push(row.oa);
-      }
-    });
+    if (region) {
+      const nestedOptions = {};
 
-    // Filter out any empty arrays at the most deeply nested layer
-    Object.keys(nestedOptions).forEach(msoa => {
-      Object.keys(nestedOptions[msoa]).forEach(lsoa => {
-        Object.keys(nestedOptions[msoa][lsoa]).forEach(oa => {
-          if (nestedOptions[msoa][lsoa][oa].length === 0) {
-            delete nestedOptions[msoa][lsoa][oa];
-          }
-        });
-        // Clean up any empty lsoa objects
-        if (Object.keys(nestedOptions[msoa][lsoa]).length === 0) {
-          delete nestedOptions[msoa][lsoa];
+      result.rows.forEach(row => {
+        if (!nestedOptions[row.iz_nm]) {
+          nestedOptions[row.iz_nm] = [];
+        }
+        // Only push oa if it exists
+        if (row.oa) {
+          nestedOptions[row.iz_nm].push(row.oa);
         }
       });
-      // Clean up any empty msoa objects
-      if (Object.keys(nestedOptions[msoa]).length === 0) {
-        delete nestedOptions[msoa];
-      }
-    });
 
-    res.json(nestedOptions);
+      // Return the nested options object directly
+      res.json(nestedOptions);
+    } else {
+      const nestedOptions = {};
+
+      result.rows.forEach(row => {
+        if (!nestedOptions[row.msoa]) {
+          nestedOptions[row.msoa] = {};
+        }
+        if (!nestedOptions[row.msoa][row.lsoa]) {
+          nestedOptions[row.msoa][row.lsoa] = [];
+        }
+        // Only push oa if it exists
+        if (row.oa) {
+          nestedOptions[row.msoa][row.lsoa].push(row.oa);
+        }
+      });
+
+      res.json(nestedOptions);
+    }
   } catch (error) {
     console.error('Error executing SQL query:', error);
     res.status(500).json({ error: 'Failed to execute query', details: error.message });
@@ -287,7 +295,7 @@ app.get('/outputAreas', async (req, res) => {
 
 app.get('/columnNames', async (req, res) => {
   const { table } = req.query;
-  const tableName = `census2021-${table.toLowerCase()}-ctry`;
+  const tableName = table.startsWith("TS") ? `census2021-${table.toLowerCase()}-ctry` : `census2022-${table.toLowerCase()}-ctry`;
 
   // SQL query to fetch distinct column names from the specified table
   const sqlQuery = `
@@ -303,7 +311,6 @@ app.get('/columnNames', async (req, res) => {
     const columnNameMappings = await mapHashedToOriginal();
     const mappedColumnNames = columnNames.map(columnName => columnNameMappings[columnName] || columnName);
     const mappedColumnNamesReplaced = mappedColumnNames.map(columnName => columnName.replace(/_/g, ' '));
-
     res.json(mappedColumnNamesReplaced);
   } catch (error) {
     console.error('Error executing SQL query:', error);
@@ -312,44 +319,61 @@ app.get('/columnNames', async (req, res) => {
 });
 
 app.post('/paramQuery', async (req, res) => {
-  const { selectedTable, geography, columns } = req.body;
+  const { selectedTable, geography, columns, isScotland } = req.body;
 
-  // Replace 'country' and 'region' with 'ctry' and 'rgn' respectively in the geography type
-  const geographyType = geography.type.replace('country', 'ctry').replace('region', 'rgn');
   const geographyValues = geography.value.split(',');
-
-  const tableName = `census2021-${selectedTable}-${geographyType}`;
+  selectedTable.toLowerCase()
+  let tableName;
+  let geographyType;
+  if (isScotland) {
+    geographyType = geography.type.replace('region', 'ca');
+    tableName = `census2022-${selectedTable}-${geographyType}`;
+  } else {
+    geographyType = geography.type.replace('country', 'ctry').replace('region', 'rgn');
+    tableName = `census2021-${selectedTable}-${geographyType}`;
+  }
 
   try {
     const columnNameMappings = await mapOriginalToHashed();
-    const alwaysIncludeColumns = ['geography', 'geography code'];
+    const alwaysIncludeColumns = ['geography'];
     const allColumns = Array.from(new Set([...alwaysIncludeColumns, ...columns]));
-    const columnsList = allColumns.map(column => {
-      const originalName = column.replace(/_/g, ' '); // Replace underscores back to spaces for mapping
-      const hashedName = columnNameMappings[originalName] || originalName; // Use the original name if no mapping is found
-      const finalName = hashedName.replace(/ /g, '_'); // Ensure all spaces are replaced with underscores
-      return `"${finalName}"`; // Quote the final column name to handle any special characters
-    }).join(', ');
+    const columnsList = allColumns
+      .map((column) => {
+        const originalName = column.replace(/_/g, ' ');
+        const hashedName = columnNameMappings[originalName] || originalName;
+        const finalName = hashedName.replace(/ /g, '_');
+        return `"${finalName}"`;
+      })
+      .join(', ');
 
-    const sqlQuery = `
-      SELECT ${columnsList}
-      FROM "${tableName.toLowerCase()}"
-      WHERE geography = ANY($1);
-    `;
+    if (isScotland && geography.type === 'izn') {
+      sqlQuery = `
+        SELECT *
+        FROM "${tableName.toLowerCase()}"
+        WHERE geography = ANY($1);
+      `;
+    } else {
+      sqlQuery = `
+        SELECT *
+        FROM "${tableName.toLowerCase()}"
+        WHERE geography = ANY($1);
+      `;
+    }
 
     const result = await client.query(sqlQuery, [geographyValues]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'No data found for the specified parameters' });
     }
-    const transformedResults = result.rows.map(row => {
+
+    const transformedResults = result.rows.map((row) => {
       const transformedRow = {};
-      Object.keys(row).forEach(key => {
-        const originalName = key.replace(/_/g, ' '); // Replace underscores back to spaces
+      Object.keys(row).forEach((key) => {
+        const originalName = key.replace(/_/g, ' ');
         transformedRow[originalName] = row[key];
       });
       return transformedRow;
     });
-    
+
     res.json({ query: sqlQuery, data: transformedResults });
   } catch (error) {
     console.error('Error executing SQL query:', error);

@@ -1,3 +1,4 @@
+// useFormState.js
 import { useState } from 'react';
 
 const useFormState = (initialState) => {
@@ -19,8 +20,14 @@ const useFormState = (initialState) => {
 
       if (newGeographies[type.toLowerCase()].includes(item)) {
         newGeographies[type.toLowerCase()] = newGeographies[type.toLowerCase()].filter((i) => i !== item);
-        for (let i = typeIndex + 1; i < hierarchy.length; i++) {
-          newGeographies[hierarchy[i]] = [];
+        if (type.toLowerCase() === 'country' && item === 'Scotland') {
+          for (let i = typeIndex + 1; i < hierarchy.length - 1; i++) {
+            newGeographies[hierarchy[i]] = [];
+          }
+        } else {
+          for (let i = typeIndex + 1; i < hierarchy.length; i++) {
+            newGeographies[hierarchy[i]] = [];
+          }
         }
       } else {
         newGeographies[type.toLowerCase()] = [...newGeographies[type.toLowerCase()], item];
@@ -30,7 +37,7 @@ const useFormState = (initialState) => {
     });
   };
 
-  const handleSelectAllClick = (type, items = []) => {
+  const handleSelectAllClick = (type, items) => {
     setFormData((prevFormData) => {
       const newGeographies = { ...prevFormData.geographies };
       const hierarchy = ['country', 'region', 'utla', 'ltla', 'msoa', 'lsoa', 'oa'];
@@ -39,8 +46,14 @@ const useFormState = (initialState) => {
       newGeographies[type.toLowerCase()] = newGeographies[type.toLowerCase()].length === items.length ? [] : items;
 
       if (newGeographies[type.toLowerCase()].length === 0) {
-        for (let i = typeIndex + 1; i < hierarchy.length; i++) {
-          newGeographies[hierarchy[i]] = [];
+        if (type.toLowerCase() === 'country' && prevFormData.geographies.country.includes('Scotland')) {
+          for (let i = typeIndex + 1; i < hierarchy.length - 1; i++) {
+            newGeographies[hierarchy[i]] = [];
+          }
+        } else {
+          for (let i = typeIndex + 1; i < hierarchy.length; i++) {
+            newGeographies[hierarchy[i]] = [];
+          }
         }
       }
 
