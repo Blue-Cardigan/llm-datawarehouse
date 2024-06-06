@@ -97,7 +97,10 @@ export default function LlmQueryForm({ setActiveTab }) {
               {llmQueryResult.errorMessage}
             </div>
           )}
-          <div>
+        </div>
+        <div className="frame">
+          <h3>Example Queries</h3>
+          <div className="example-queries">
             <ul>
               {exampleQueries.map((exampleQuery, index) => (
                 <li key={index} onClick={() => handleExampleQueryClick(exampleQuery)}>

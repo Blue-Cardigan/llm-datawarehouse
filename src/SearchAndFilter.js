@@ -1,33 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import tableDetails from './table_details.json';
 import TableDisplay from './TableDisplay';
+import useFetchData from './hooks/useFetchData';
+import useFormState from './hooks/useFormState';
+import GeographySelector from './GeographySelector';
+import CustomDropdown from './CustomDropdown';
 import './index.css'; 
 
 const SearchAndFilter = () => {
-  const [formData, setFormData] = useState({
+  const initialState = {
     date: '2021',
     selectedTable: '',
     geographies: {
       country: [],
       region: [],
+      izn: [],
       utla: [],
       ltla: [],
       msoa: [],
       lsoa: [],
       oa: []
     }
-  });
+  };
 
-  const [columnNames, setColumnNames] = useState([]);
+  const { formData, handleChange, handleGeographyClick, handleSelectAllClick } = useFormState(initialState);
   const [selectedColumns, setSelectedColumns] = useState([]);
-  const [largeRegions, setLargeRegions] = useState({});
   const [selectedLTLAData, setSelectedLTLAData] = useState({});
   const [queryResult, setQueryResult] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedRegionData, setSelectedRegionData] = useState({});
+
+  const { data: columnNames, isLoading: isLoadingColumns } = useFetchData(
+    formData.selectedTable ? `${process.env.REACT_APP_API_URL}/columnNames?table=${formData.selectedTable}` : null,
+    [formData.selectedTable]
+  );
+
+  const geographyHierarchy = {
+    default: ['oa', 'lsoa', 'msoa', 'ltla', 'utla', 'region', 'country'],
+    scotland: ['oa', 'izn', 'region', 'country'],
+  };
 
   useEffect(() => {
-    fetchCtryRgnLA();
-  }, []);
+    if (columnNames && columnNames.length > 0) {
+      setSelectedColumns(columnNames);
+    }
+  }, [columnNames]);
+
+  const { data: largeRegions, isLoading: isLoadingRegions } = useFetchData(
+    `${process.env.REACT_APP_API_URL}/largeRegions`,
+    []
+  );
 
   useEffect(() => {
     if (formData.geographies.ltla.length > 0) {
@@ -36,42 +58,51 @@ const SearchAndFilter = () => {
   }, [formData.geographies.ltla]);
 
   useEffect(() => {
-    if (formData.selectedTable && formData.selectedTable.length > 0) {
-      fetchColumnNames(formData.selectedTable);
+    if (formData.geographies.country.includes('Scotland') && formData.geographies.region.length > 0) {
+      formData.geographies.region.forEach(region => fetchOAsForScotland(region));
+    } else if (formData.geographies.ltla.length > 0) {
+      formData.geographies.ltla.forEach(ltla => fetchSOAs(ltla));
     }
-  }, [formData.selectedTable]);
+  }, [formData.geographies.ltla, formData.geographies.region]);
 
-  const fetchColumnNames = async (table) => {
+  useEffect(() => {
+    if (formData.geographies.country.includes('Scotland') && formData.geographies.region.length > 0) {
+      formData.geographies.region.forEach(region => fetchIZNsForScotland(region));
+    }
+  }, [formData.geographies.region]);
+
+  const getSelectedGeographyLevel = (geographies) => {
+    const { country } = geographies;
+    const hierarchy = country.includes('Scotland') ? geographyHierarchy.scotland : geographyHierarchy.default;
+
+    for (const level of hierarchy) {
+      if (geographies[level].length > 0) {
+        return { type: level, value: geographies[level].join(',') };
+      }
+    }
+
+    return {};
+  };
+  
+  const fetchIZNsForScotland = async (region) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/columnNames?table=${table}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/subregions?region=${region}`);
       const data = await response.json();
-      setColumnNames(data);
+      setSelectedRegionData((prev) => ({ ...prev, [region]: data }));
     } catch (error) {
-      console.error('Failed to load column names:', error);
+      console.error('Error fetching IZNs for region:', region, error);
+      setSelectedRegionData((prev) => ({ ...prev, [region]: {} }));
     }
   };
 
-  const handleColumnSelection = (columnName) => {
-    setSelectedColumns((prevColumns) =>
-      prevColumns.includes(columnName)
-        ? prevColumns.filter((col) => col !== columnName)
-        : [...prevColumns, columnName]
-    );
-  };
-
-  const handleSelectAllColumns = () => {
-    setSelectedColumns((prevColumns) =>
-      prevColumns.length === columnNames.length ? [] : columnNames
-    );
-  };
-
-  const fetchCtryRgnLA = async () => {
+  const fetchOAsForScotland = async (region) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/largeRegions`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/subregions?region=${region}`);
       const data = await response.json();
-      setLargeRegions(data);
+      setSelectedLTLAData((prev) => ({ ...prev, [region]: data }));
     } catch (error) {
-      console.error('Failed to load geography mapping:', error);
+      console.error('Error fetching OAs for region:', region, error);
+      setSelectedLTLAData((prev) => ({ ...prev, [region]: {} }));
     }
   };
 
@@ -86,63 +117,25 @@ const SearchAndFilter = () => {
     }
   };
 
-  const handleGeographyClick = (type, item) => {
-    setFormData((prevFormData) => {
-      const newGeographies = { ...prevFormData.geographies };
-      const hierarchy = ['country', 'region', 'utla', 'ltla', 'msoa', 'lsoa', 'oa'];
-      const typeIndex = hierarchy.indexOf(type.toLowerCase());
-
-      if (newGeographies[type.toLowerCase()].includes(item)) {
-        newGeographies[type.toLowerCase()] = newGeographies[type.toLowerCase()].filter((i) => i !== item);
-        for (let i = typeIndex + 1; i < hierarchy.length; i++) {
-          newGeographies[hierarchy[i]] = [];
-        }
-      } else {
-        newGeographies[type.toLowerCase()] = [...newGeographies[type.toLowerCase()], item];
-      }
-
-      return { ...prevFormData, geographies: newGeographies };
-    });
+  const handleColumnSelection = (columnName) => {
+    setSelectedColumns((prevColumns) =>
+      prevColumns.includes(columnName)
+        ? prevColumns.filter((col) => col !== columnName)
+        : [...prevColumns, columnName]
+    );
   };
 
-  const handleSelectAllClick = (type, items) => {
-    setFormData((prevFormData) => {
-      const newGeographies = { ...prevFormData.geographies };
-      const hierarchy = ['country', 'region', 'utla', 'ltla', 'msoa', 'lsoa', 'oa'];
-      const typeIndex = hierarchy.indexOf(type.toLowerCase());
-
-      newGeographies[type.toLowerCase()] = newGeographies[type.toLowerCase()].length === items.length ? [] : items;
-
-      if (newGeographies[type.toLowerCase()].length === 0) {
-        for (let i = typeIndex + 1; i < hierarchy.length; i++) {
-          newGeographies[hierarchy[i]] = [];
-        }
-      }
-
-      return { ...prevFormData, geographies: newGeographies };
-    });
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleSelectAllColumns = () => {
+    setSelectedColumns((prevColumns) =>
+      columnNames && prevColumns.length === columnNames.length ? [] : columnNames
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let geography = {};
     const { geographies } = formData;
 
-    const hierarchy = ['oa', 'lsoa', 'msoa', 'ltla', 'utla', 'region', 'country'];
-    for (const level of hierarchy) {
-      if (geographies[level].length > 0) {
-        geography = { type: level, value: geographies[level].join(',') };
-        break;
-      }
-    }
+    const selectedGeography = getSelectedGeographyLevel(geographies);
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/paramQuery`, {
@@ -152,9 +145,10 @@ const SearchAndFilter = () => {
         },
         body: JSON.stringify({
           selectedTable: formData.selectedTable,
-          geography: geography,
-          columns: selectedColumns.map((column) => column.replace(/ /g, '_'))
-        })
+          geography: selectedGeography,
+          columns: selectedColumns.map((column) => column.replace(/ /g, '_')),
+          isScotland: geographies.country.includes('Scotland'),
+        }),
       });
 
       if (!response.ok) {
@@ -168,186 +162,337 @@ const SearchAndFilter = () => {
     }
   };
 
-  const GeographySelector = ({ type, items, selectedItems, handleClick, handleSelectAll }) => (
-    <div>
-      <h2>{type}</h2>
-      <button type="button" className="select-all-btn button" onClick={() => handleSelectAll(type, items)}>
-        {selectedItems.length === items.length ? 'Deselect All' : 'Select All'}
-      </button>
-      {items.map((item) => (
-        <button
-          type="button"
-          key={item}
-          onClick={() => handleClick(type, item)}
-          className={selectedItems.includes(item) ? 'selected' : ''}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
-  );
+  const tableOptions = Object.entries(tableDetails).map(([code, details]) => ({
+    code,
+    name: details.name,
+  }));
+
+  const preprocessColumnNames = (columns) => {
+    if (columns.length === 0) return columns;
+
+    const excludeColumns = ['counting', 'date', 'geography', 'geography code', 'id'];
+    const filteredColumns = columns.filter(
+      (col) => !excludeColumns.map(excludeCol => excludeCol.toLowerCase()).includes(col.trim().toLowerCase())
+    );
+
+    const findCommonPrefix = (strings) => {
+      if (strings.length === 0) return '';
+      let prefix = strings[0];
+      for (let i = 1; i < strings.length; i++) {
+        while (strings[i].indexOf(prefix) !== 0) {
+          prefix = prefix.substring(0, prefix.length - 1);
+          if (prefix.length === 0) return '';
+        }
+      }
+      return prefix;
+    };
+
+    const findCommonSuffix = (strings) => {
+      if (strings.length === 0) return '';
+      let suffix = strings[0];
+      for (let i = 1; i < strings.length; i++) {
+        while (!strings[i].endsWith(suffix)) {
+          suffix = suffix.substring(1);
+          if (suffix.length === 0) return '';
+        }
+      }
+      return suffix;
+    };
+
+    const commonPrefix = findCommonPrefix(filteredColumns);
+    const commonSuffix = findCommonSuffix(filteredColumns);
+
+    const tableName = formData.selectedTable ? tableDetails[formData.selectedTable].name : '';
+
+    return columns.map((col) => {
+      let newCol = col.replace(/; measures: Value$/, '').trim();
+      if (commonPrefix.length > 5) {
+        newCol = newCol.replace(commonPrefix, '').trim();
+      }
+      if (commonSuffix.length > 5) {
+        newCol = newCol.replace(new RegExp(`${commonSuffix}$`), '').trim();
+      }
+      if (tableName != newCol) {
+        newCol = newCol.replace(new RegExp(`^${tableName}`, 'i'), '').trim();
+      }
+      newCol = newCol.replace(/;|:/g, '').trim();
+      newCol = newCol.replace(/[\s;:]*measures[\s;:]*Value[\s;:]*/gi, '').trim();
+      newCol = newCol.replace(/measures$/i, '').trim();
+
+      return newCol;
+    });
+  };
+
+  const processedColumnNames = preprocessColumnNames(columnNames || []);
 
   return (
-    <div>
-      <h2>Search and Filter</h2>
+    <div className="search-and-filter">
       <form onSubmit={handleSubmit}>
-        <div className="frame">
-          <h3>First, select the data you need:</h3>
-          <div className="table-select">
-            <div>
+      <div className="frame">
+        <div className="left-column">
+          <div className="section-header">
+            <h3>Select a Table</h3>
+          </div>
+          {formData.selectedTable && (
+            <button type="button" className="column-select-all-btn select-all-btn button" onClick={handleSelectAllColumns}>
+              {columnNames && selectedColumns.length === columnNames.length ? 'Deselect All' : 'Select All'}
+            </button>
+          )}
+        </div>
+        <div className="right-column">
+          <div className="section-content">
+            <div className="table-select">
               <label>
-                <input
-                  list="table-options"
-                  name="selectedTable"
+                <CustomDropdown
+                  options={tableOptions}
                   value={formData.selectedTable}
                   onChange={handleChange}
-                  placeholder="Find a Dataset"
+                  placeholder="Search Datasets"
                 />
-                <datalist id="table-options">
-                  {Object.entries(tableDetails)
-                    .sort((a, b) => a[1].name.localeCompare(b[1].name))
-                    .map(([code, details]) => (
-                      <option key={code} value={code}>
-                        {details.name}
-                      </option>
-                    ))}
-                </datalist>
               </label>
             </div>
-            <div>
-              <label>
-                <select
-                  className="dropdown year-select"
-                  type="number"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                >
-                  <option value="2016">2001</option>
-                  <option value="2011">2011</option>
-                  <option value="2021">2021</option>
-                </select>
-              </label>
+            <div className="column-select">
+              {processedColumnNames.length > 0 && (
+                <div>
+                  <label><h4>Columns:</h4></label>
+                  <div className="column-buttons">
+                    {processedColumnNames
+                      .filter((columnName) => {
+                        const excludeColumns = ['counting', 'date', 'geography', 'geography code', 'id'];
+                        return !excludeColumns.map(excludeCol => excludeCol.toLowerCase()).includes(columnName.trim().toLowerCase());
+                      })
+                      .map((processedColumnName, index) => {
+                        const originalColumnName = columnNames[index];
+                        return (
+                          <button
+                            className={selectedColumns.includes(originalColumnName) ? 'selected' : ''}
+                            type="button"
+                            key={originalColumnName}
+                            onClick={() => handleColumnSelection(originalColumnName)}
+                          >
+                            {processedColumnName}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          <div className="column-select">
-            {columnNames.length > 0 && (
-              <div>
-                <label>Columns:</label>
-                <button type="button" className="select-all-btn button" onClick={handleSelectAllColumns}>
-                  {selectedColumns.length === columnNames.length ? 'Deselect All' : 'Select All'}
+        </div>
+      </div>
+        {formData.selectedTable && (
+          <>
+            <hr />
+            <div className="frame">
+              <div className="section-header">
+                <h3>Filter by Geography</h3>
+              </div>
+            </div>
+            <div className="frame">
+            <div className="left-column">
+              <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('country', largeRegions ? Object.keys(largeRegions) : [])}>
+                {formData.geographies.country.length === (largeRegions ? Object.keys(largeRegions).length : 0) ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="right-column">
+              <div className="section-content">
+                <GeographySelector
+                  type="Country"
+                  items={largeRegions ? Object.keys(largeRegions) : []}
+                  selectedItems={formData.geographies.country}
+                  handleClick={handleGeographyClick}
+                />
+              </div>
+            </div>
+          </div>
+          {formData.geographies.country.length > 0 && (
+            <div className="frame">
+              <div className="left-column">
+                <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('region', formData.geographies.country.flatMap((country) => country === "Scotland" ? largeRegions[country] : Object.keys(largeRegions[country] || {})))}>
+                  {formData.geographies.region.length === formData.geographies.country.flatMap((country) => country === "Scotland" ? largeRegions[country] : Object.keys(largeRegions[country] || {})).length ? 'Deselect All' : 'Select All'}
                 </button>
-                {columnNames
-                  .filter((columnName) => {
-                    const excludeColumns = ['date', 'geography', 'geography code', 'id'];
-                    return !excludeColumns.includes(columnName.trim().toLowerCase());
-                  })
-                  .map((columnName) => {
-                    const tableDetailsName = tableDetails[formData.selectedTable]?.name || '';
-                    const cleanColumnName = columnName.replace(new RegExp(`^${tableDetailsName}:?`, 'i'), '').trim();
-                    return (
-                      <button
-                        className={selectedColumns.includes(columnName) ? 'selected' : ''}
-                        type="button"
-                        key={columnName}
-                        onClick={() => handleColumnSelection(columnName)}
-                      >
-                        {cleanColumnName}
-                      </button>
-                    );
-                  })}
+              </div>
+              <div className="right-column">
+                <div className="section-content">
+                  <GeographySelector
+                    type={"Region"}
+                    items={formData.geographies.country.flatMap((country) => country === "Scotland" ? largeRegions[country] : Object.keys(largeRegions[country] || {}))}
+                    selectedItems={formData.geographies.region}
+                    handleClick={handleGeographyClick}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {formData.geographies.region.length > 0 && !formData.geographies.country.includes('Scotland') && (
+            <div className="frame">
+              <div className="left-column">
+                <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('utla', formData.geographies.region.flatMap((region) => formData.geographies.country.flatMap((country) => Object.keys(largeRegions[country]?.[region] || {}))))}>
+                  {formData.geographies.utla.length === formData.geographies.region.flatMap((region) => formData.geographies.country.flatMap((country) => Object.keys(largeRegions[country]?.[region] || {}))).length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              <div className="right-column">
+                <div className="section-content">
+                  <GeographySelector
+                    type="UTLA"
+                    items={formData.geographies.region.flatMap((region) =>
+                      formData.geographies.country.flatMap((country) => Object.keys(largeRegions[country]?.[region] || {}))
+                    )}
+                    selectedItems={formData.geographies.utla}
+                    handleClick={handleGeographyClick}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {formData.geographies.region.length > 0 && formData.geographies.country.includes('Scotland') && (
+          <div className="frame">
+            <div className="left-column">
+              <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('izn', formData.geographies.region.flatMap((region) => Object.keys(selectedRegionData[region] || {})))}>
+                {formData.geographies.izn.length === formData.geographies.region.flatMap((region) => Object.keys(selectedRegionData[region] || {})).length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="right-column">
+              <div className="section-content">
+                <GeographySelector
+                  type="IZN"
+                  items={formData.geographies.region.flatMap((region) => Object.keys(selectedRegionData[region] || {}))}
+                  selectedItems={formData.geographies.izn}
+                  handleClick={handleGeographyClick}
+                />
+              </div>
+            </div>
+          </div>
+          )}
+          {formData.geographies.izn.length > 0 && (
+            <div className="frame">
+              <div className="left-column">
+                <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('oa', formData.geographies.izn.flatMap((izn) => formData.geographies.region.flatMap((region) => Object.values(selectedRegionData[region]?.[izn] || {}))))}>
+                  {formData.geographies.oa.length === formData.geographies.izn.flatMap((izn) => formData.geographies.region.flatMap((region) => Object.values(selectedRegionData[region]?.[izn] || {}))).length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              <div className="right-column">
+                <div className="section-content">
+                  <GeographySelector
+                    type="OA"
+                    items={formData.geographies.izn.flatMap((izn) =>
+                      formData.geographies.region.flatMap((region) =>
+                        Object.values(selectedRegionData[region]?.[izn] || {})
+                      )
+                    )}
+                    selectedItems={formData.geographies.oa}
+                    handleClick={handleGeographyClick}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+            {formData.geographies.utla.length > 0 && (
+              <div className="frame">
+                <div className="left-column">
+                  <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('ltla', formData.geographies.utla.flatMap((utla) => formData.geographies.region.flatMap((region) => formData.geographies.country.flatMap((country) => largeRegions[country]?.[region]?.[utla] || []))))}>
+                    {formData.geographies.ltla.length === formData.geographies.utla.flatMap((utla) => formData.geographies.region.flatMap((region) => formData.geographies.country.flatMap((country) => largeRegions[country]?.[region]?.[utla] || []))).length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+                <div className="right-column">
+                  <div className="section-content">
+                    <GeographySelector
+                      type="LTLA"
+                      items={formData.geographies.utla.flatMap((utla) =>
+                        formData.geographies.region.flatMap((region) =>
+                          formData.geographies.country.flatMap((country) => largeRegions[country]?.[region]?.[utla] || [])
+                        )
+                      )}
+                      selectedItems={formData.geographies.ltla}
+                      handleClick={handleGeographyClick}
+                    />
+                  </div>
+                </div>
               </div>
             )}
+            {formData.geographies.ltla.length > 0 && (
+              <div className="frame">
+                <div className="left-column">
+                  <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('msoa', formData.geographies.ltla.flatMap((ltla) => Object.keys(selectedLTLAData[ltla] || {})))}>
+                    {formData.geographies.msoa.length === formData.geographies.ltla.flatMap((ltla) => Object.keys(selectedLTLAData[ltla] || {})).length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+                <div className="right-column">
+                  <div className="section-content">
+                    <GeographySelector
+                      type="MSOA"
+                      items={formData.geographies.ltla.flatMap((ltla) => Object.keys(selectedLTLAData[ltla] || {}))}
+                      selectedItems={formData.geographies.msoa}
+                      handleClick={handleGeographyClick}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {formData.geographies.msoa.length > 0 && (
+              <div className="frame">
+                <div className="left-column">
+                  <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('lsoa', formData.geographies.msoa.flatMap((msoa) => formData.geographies.ltla.flatMap((ltla) => Object.entries(selectedLTLAData[ltla]?.[msoa] || {}).flatMap(([lsoa]) => lsoa))))}>
+                    {formData.geographies.lsoa.length === formData.geographies.msoa.flatMap((msoa) => formData.geographies.ltla.flatMap((ltla) => Object.entries(selectedLTLAData[ltla]?.[msoa] || {}).flatMap(([lsoa]) => lsoa))).length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div className="right-column">
+                    <div className="section-content">
+                      <GeographySelector
+                        type="LSOA"
+                        items={formData.geographies.msoa.flatMap((msoa) =>
+                          formData.geographies.ltla.flatMap((ltla) =>
+                            Object.entries(selectedLTLAData[ltla]?.[msoa] || {}).flatMap(([lsoa]) => lsoa)
+                          )
+                        )}
+                        selectedItems={formData.geographies.lsoa}
+                        handleClick={handleGeographyClick}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {formData.geographies.lsoa.length > 0 && (
+                <div className="frame">
+                  <div className="left-column">
+                    <button type="button" className="select-all-btn button" onClick={() => handleSelectAllClick('oa', formData.geographies.msoa.flatMap((msoa) => formData.geographies.ltla.flatMap((ltla) => formData.geographies.lsoa.flatMap((lsoa) => Object.entries(selectedLTLAData[ltla]?.[msoa]?.[lsoa] || {}).map(([oa]) => oa)))))}>
+                      {formData.geographies.oa.length === formData.geographies.msoa.flatMap((msoa) => formData.geographies.ltla.flatMap((ltla) => formData.geographies.lsoa.flatMap((lsoa) => Object.entries(selectedLTLAData[ltla]?.[msoa]?.[lsoa] || {}).map(([oa]) => oa))).length ? 'Deselect All' : 'Select All')}
+                    </button>
+                  </div>
+                  <div className="right-column">
+                    <div className="section-content">
+                      <GeographySelector
+                        type="OA"
+                      items={formData.geographies.msoa.flatMap((msoa) =>
+                        formData.geographies.ltla.flatMap((ltla) =>
+                          formData.geographies.lsoa.flatMap((lsoa) =>
+                            Object.entries(selectedLTLAData[ltla]?.[msoa]?.[lsoa] || {}).map(([oa]) => oa)
+                          )
+                        )
+                      )}
+                      selectedItems={formData.geographies.oa}
+                      handleClick={handleGeographyClick}
+                    />
+                  </div>  
+                </div>
+              </div>
+              )}
+          </>
+        )}
+        <hr />
+        <div className="frame">
+          <div className="section-header">
+            <h3>Load Data</h3>
           </div>
-        </div>
-        <div className="frame">
-          <h3>Second, select the geographic areas:</h3>
-          <GeographySelector
-            type="Country"
-            items={Object.keys(largeRegions)}
-            selectedItems={formData.geographies.country}
-            handleClick={handleGeographyClick}
-            handleSelectAll={handleSelectAllClick}
-          />
-          {formData.geographies.country.length > 0 && (
-            <GeographySelector
-              type="Region"
-              items={formData.geographies.country.flatMap((country) => Object.keys(largeRegions[country] || {}))}
-              selectedItems={formData.geographies.region}
-              handleClick={handleGeographyClick}
-              handleSelectAll={handleSelectAllClick}
-            />
-          )}
-          {formData.geographies.region.length > 0 && (
-            <GeographySelector
-              type="UTLA"
-              items={formData.geographies.region.flatMap((region) =>
-                formData.geographies.country.flatMap((country) => Object.keys(largeRegions[country]?.[region] || {}))
-              )}
-              selectedItems={formData.geographies.utla}
-              handleClick={handleGeographyClick}
-              handleSelectAll={handleSelectAllClick}
-            />
-          )}
-          {formData.geographies.utla.length > 0 && (
-            <GeographySelector
-              type="LTLA"
-              items={formData.geographies.utla.flatMap((utla) =>
-                formData.geographies.region.flatMap((region) =>
-                  formData.geographies.country.flatMap((country) => largeRegions[country]?.[region]?.[utla] || [])
-                )
-              )}
-              selectedItems={formData.geographies.ltla}
-              handleClick={handleGeographyClick}
-              handleSelectAll={handleSelectAllClick}
-            />
-          )}
-          {formData.geographies.ltla.length > 0 && (
-            <GeographySelector
-              type="MSOA"
-              items={formData.geographies.ltla.flatMap((ltla) => Object.keys(selectedLTLAData[ltla] || {}))}
-              selectedItems={formData.geographies.msoa}
-              handleClick={handleGeographyClick}
-              handleSelectAll={handleSelectAllClick}
-            />
-          )}
-          {formData.geographies.msoa.length > 0 && (
-            <GeographySelector
-              type="LSOA"
-              items={formData.geographies.msoa.flatMap((msoa) =>
-                formData.geographies.ltla.flatMap((ltla) =>
-                  Object.entries(selectedLTLAData[ltla]?.[msoa] || {}).flatMap(([lsoa]) => lsoa)
-                )
-              )}
-              selectedItems={formData.geographies.lsoa}
-              handleClick={handleGeographyClick}
-              handleSelectAll={handleSelectAllClick}
-            />
-          )}
-          {formData.geographies.lsoa.length > 0 && (
-            <GeographySelector
-              type="OA"
-              items={formData.geographies.msoa.flatMap((msoa) =>
-                formData.geographies.ltla.flatMap((ltla) =>
-                  formData.geographies.lsoa.flatMap((lsoa) =>
-                    Object.entries(selectedLTLAData[ltla]?.[msoa]?.[lsoa] || {}).map(([oa]) => oa)
-                  )
-                )
-              )}
-              selectedItems={formData.geographies.oa}
-              handleClick={handleGeographyClick}
-              handleSelectAll={handleSelectAllClick}
-            />
-          )}
-        </div>
-        <div className="frame">
-            <h3>Third, see and download the data:</h3>
+          <div className="section-content">
             <button type="submit">Submit Query</button>
             <TableDisplay 
                 data={queryResult.data} 
                 query={queryResult.query}
                 isLoading={isLoading} 
             />
+          </div>
         </div>
       </form>
     </div>

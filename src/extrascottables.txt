@@ -1,0 +1,24 @@
+// "UV201": {
+//   "name": "Ethnic group",
+//   "table_names": [
+//     "census2022-uv201-ctry",
+//     "census2022-uv201-ca",
+//     "census2022-uv201-oa"
+//   ]
+// },
+// "UV204": {
+//   "name": "Country of birth",
+//   "table_names": [
+//     "census2022-uv204-ctry",
+//     "census2022-uv204-ca",
+//     "census2022-uv204-oa"
+//   ]
+// },
+// "UV210": {
+//   "name": "English language skills",
+//   "table_names": [
+//     "census2022-uv210-ctry",
+//     "census2022-uv210-ca",
+//     "census2022-uv210-oa"
+//   ]
+// },

@@ -1,6 +1,0 @@
-AWS Hosting with more census data from Ian
-
-Restore:
-rm 'data/db-handling.ipynb'
-rm 'data/schema-description.json'
-rm 'data/schema-description.txt'

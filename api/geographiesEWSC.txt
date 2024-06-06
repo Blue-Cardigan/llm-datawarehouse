@@ -1,0 +1,20 @@
+SC
+
+ctry (1)
+council area (Local Authority), CA2019 (32)
+locality,  (629)
+- CLOC2022 (657)
+data zone 2011, DZ2011 (6976)
+output area, OA2022 (46,351)
+
+Find lookups here: https://www.nrscotland.gov.uk/statistics-and-data/geography/our-products/census-datasets/2022-census/2022-census-indexes
+
+
+E&W
+ctry (2)
+Region
+UTLA
+LTLA
+MSOA
+LSOA
+OA

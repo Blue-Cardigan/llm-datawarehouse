@@ -1,396 +1,405 @@
 {
-    "TS001": {
-      "name": "Number of usual residents in households and communal establishments",
-      "table_names": [
-        "census2021-ts001-msoa",
-        "census2021-ts001-ltla",
-        "census2021-ts001-ctry",
-        "census2021-ts001-oa",
-        "census2021-ts001-rgn",
-        "census2021-ts001-utla",
-        "census2021-ts001-lsoa"
-      ]
-    },
-    "TS002": {
-      "name": "Legal partnership status",
-      "table_names": [
-        "census2021-ts002-msoa",
-        "census2021-ts002-ltla",
-        "census2021-ts002-ctry",
-        "census2021-ts002-oa",
-        "census2021-ts002-rgn",
-        "census2021-ts002-utla",
-        "census2021-ts002-lsoa"
-      ]
-    },
-    "TS003": {
-      "name": "Household composition",
-      "table_names": [
-        "census2021-ts003-msoa",
-        "census2021-ts003-ltla",
-        "census2021-ts003-ctry",
-        "census2021-ts003-oa",
-        "census2021-ts003-rgn",
-        "census2021-ts003-utla",
-        "census2021-ts003-lsoa"
-      ]
-    },
-    "TS004": {
-      "name": "Country of birth",
-      "table_names": [
-        "census2021-ts004-msoa",
-        "census2021-ts004-ltla",
-        "census2021-ts004-ctry",
-        "census2021-ts004-oa",
-        "census2021-ts004-rgn",
-        "census2021-ts004-utla",
-        "census2021-ts004-lsoa"
-      ]
-    },
-    "TS005": {
-      "name": "Passports held",
-      "table_names": [
-        "census2021-ts005-msoa",
-        "census2021-ts005-ltla",
-        "census2021-ts005-ctry",
-        "census2021-ts005-oa",
-        "census2021-ts005-rgn",
-        "census2021-ts005-utla",
-        "census2021-ts005-lsoa"
-      ]
-    },
-    "TS006": {
-      "name": "Population density",
-      "table_names": [
-        "census2021-ts006-msoa",
-        "census2021-ts006-ltla",
-        "census2021-ts006-ctry",
-        "census2021-ts006-oa",
-        "census2021-ts006-rgn",
-        "census2021-ts006-utla",
-        "census2021-ts006-lsoa"
-      ]
-    },
-    "TS007": {
-      "name": "Age by single year of age",
-      "table_names": [
-        "census2021-ts007-msoa",
-        "census2021-ts007-ltla",
-        "census2021-ts007-ctry",
-        "census2021-ts007-oa",
-        "census2021-ts007-rgn",
-        "census2021-ts007-utla",
-        "census2021-ts007-lsoa"
-      ]
-    },
-    "TS007A": {
-      "name": "Age by five-year age bands",
-      "table_names": [
-        "census2021-ts007a-msoa",
-        "census2021-ts007a-ltla",
-        "census2021-ts007a-ctry",
-        "census2021-ts007a-oa",
-        "census2021-ts007a-rgn",
-        "census2021-ts007a-utla",
-        "census2021-ts007a-lsoa"
-      ]
-    },
-    "TS008": {
-      "name": "Sex",
-      "table_names": [
-        "census2021-ts008-msoa",
-        "census2021-ts008-ltla",
-        "census2021-ts008-ctry",
-        "census2021-ts008-oa",
-        "census2021-ts008-rgn",
-        "census2021-ts008-utla",
-        "census2021-ts008-lsoa"
-      ]
-    },
-    "TS009": {
-      "name": "Sex by single year of age",
-      "table_names": [
-        "census2021-ts009-msoa",
-        "census2021-ts009-ltla",
-        "census2021-ts009-ctry",
-        "census2021-ts009-oa",
-        "census2021-ts009-rgn",
-        "census2021-ts009-utla",
-        "census2021-ts009-lsoa"
-      ]
-    },
-    "TS010": {
-      "name": "Living arrangements",
-      "table_names": [
-        "census2021-ts010-msoa",
-        "census2021-ts010-ltla",
-        "census2021-ts010-ctry",
-        "census2021-ts010-oa",
-        "census2021-ts010-rgn",
-        "census2021-ts010-utla",
-        "census2021-ts010-lsoa"
-      ]
-    },
-    "TS011": {
-      "name": "Households by deprivation dimensions",
-      "table_names": [
-        "census2021-ts011-msoa",
-        "census2021-ts011-ltla",
-        "census2021-ts011-ctry",
-        "census2021-ts011-oa",
-        "census2021-ts011-rgn",
-        "census2021-ts011-utla",
-        "census2021-ts011-lsoa"
-      ]
-    },
-    "TS012": {
-      "name": "Country of birth (detailed)",
-      "table_names": [
-        "census2021-ts012-msoa",
-        "census2021-ts012-ltla",
-        "census2021-ts012-ctry",
-        "census2021-ts012-oa",
-        "census2021-ts012-rgn",
-        "census2021-ts012-utla",
-        "census2021-ts012-lsoa"
-      ]
-    },
-    "TS013": {
-      "name": "Passports held (detailed)",
-      "table_names": [
-        "census2021-ts013-msoa",
-        "census2021-ts013-ltla",
-        "census2021-ts013-ctry",
-        "census2021-ts013-oa",
-        "census2021-ts013-rgn",
-        "census2021-ts013-utla",
-        "census2021-ts013-lsoa"
-      ]
-    },
-    "TS015": {
-      "name": "Year of arrival in UK",
-      "table_names": [
-        "census2021-ts015-msoa",
-        "census2021-ts015-ltla",
-        "census2021-ts015-ctry",
-        "census2021-ts015-oa",
-        "census2021-ts015-rgn",
-        "census2021-ts015-utla",
-        "census2021-ts015-lsoa"
-      ]
-    },
-    "TS016": {
-      "name": "Length of residence",
-      "table_names": [
-        "census2021-ts016-msoa",
-        "census2021-ts016-ltla",
-        "census2021-ts016-ctry",
-        "census2021-ts016-oa",
-        "census2021-ts016-rgn",
-        "census2021-ts016-utla",
-        "census2021-ts016-lsoa"
-      ]
-    },
-    "TS017": {
-      "name": "Household size",
-      "table_names": [
-        "census2021-ts017-msoa",
-        "census2021-ts017-ltla",
-        "census2021-ts017-ctry",
-        "census2021-ts017-oa",
-        "census2021-ts017-rgn",
-        "census2021-ts017-utla",
-        "census2021-ts017-lsoa"
-      ]
-    },
-    "TS018": {
-      "name": "Age of arrival in the UK",
-      "table_names": [
-        "census2021-ts018-msoa",
-        "census2021-ts018-ltla",
-        "census2021-ts018-ctry",
-        "census2021-ts018-oa",
-        "census2021-ts018-rgn",
-        "census2021-ts018-utla",
-        "census2021-ts018-lsoa"
-      ]
-    },
-    "TS019": {
-      "name": "Migrant Indicator",
-      "table_names": [
-        "census2021-ts019-msoa",
-        "census2021-ts019-ltla",
-        "census2021-ts019-ctry",
-        "census2021-ts019-oa",
-        "census2021-ts019-rgn",
-        "census2021-ts019-utla",
-        "census2021-ts019-lsoa"
-      ]
-    },
-    "TS020": {
-      "name": "Number of non-UK short-term residents by sex",
-      "table_names": [
-        "census2021-ts020-msoa",
-        "census2021-ts020-ltla",
-        "census2021-ts020-ctry",
-        "census2021-ts020-oa",
-        "census2021-ts020-rgn",
-        "census2021-ts020-utla",
-        "census2021-ts020-lsoa"
-      ]
-    },
-    "TS041": {
-      "name": "Number of Households",
-      "table_names": [
-        "census2021-ts041-msoa",
-        "census2021-ts041-ltla",
-        "census2021-ts041-ctry",
-        "census2021-ts041-oa",
-        "census2021-ts041-rgn",
-        "census2021-ts041-utla",
-        "census2021-ts041-lsoa"
-      ]
-    },
-    "TS021": {
-      "name": "Ethnic group",
-      "table_names": [
-        "census2021-ts021-msoa",
-        "census2021-ts021-ltla",
-        "census2021-ts021-ctry",
-        "census2021-ts021-oa",
-        "census2021-ts021-rgn",
-        "census2021-ts021-utla",
-        "census2021-ts021-lsoa"
-      ]
-    },
-    "TS022": {
-      "name": "Ethnic group (detailed)",
-      "table_names": [
-        "census2021-ts022-rgn",
-        "census2021-ts022-utla",
-        "census2021-ts022-ctry",
-        "census2021-ts022-ltla",
-        "census2021-ts022-msoa"
-      ]
-    },
-    "TS023": {
-      "name": "Multiple ethnic group",
-      "table_names": [
-        "census2021-ts023-msoa",
-        "census2021-ts023-ltla",
-        "census2021-ts023-ctry",
-        "census2021-ts023-oa",
-        "census2021-ts023-rgn",
-        "census2021-ts023-utla",
-        "census2021-ts023-lsoa"
-      ]
-    },
-    "TS024": {
-      "name": "Main language (detailed)",
-      "table_names": [
-        "census2021-ts024-msoa",
-        "census2021-ts024-ltla",
-        "census2021-ts024-ctry",
-        "census2021-ts024-oa",
-        "census2021-ts024-rgn",
-        "census2021-ts024-utla",
-        "census2021-ts024-lsoa"
-      ]
-    },
-    "TS025": {
-      "name": "Household language",
-      "table_names": [
-        "census2021-ts025-msoa",
-        "census2021-ts025-ltla",
-        "census2021-ts025-ctry",
-        "census2021-ts025-oa",
-        "census2021-ts025-rgn",
-        "census2021-ts025-utla",
-        "census2021-ts025-lsoa"
-      ]
-    },
-    "TS026": {
-      "name": "Multiple main languages in households",
-      "table_names": [
-        "census2021-ts026-msoa",
-        "census2021-ts026-ltla",
-        "census2021-ts026-ctry",
-        "census2021-ts026-oa",
-        "census2021-ts026-rgn",
-        "census2021-ts026-utla",
-        "census2021-ts026-lsoa"
-      ]
-    },
-    "TS027": {
-      "name": "National identity - UK",
-      "table_names": [
-        "census2021-ts027-msoa",
-        "census2021-ts027-ltla",
-        "census2021-ts027-ctry",
-        "census2021-ts027-oa",
-        "census2021-ts027-rgn",
-        "census2021-ts027-utla",
-        "census2021-ts027-lsoa"
-      ]
-    },
-    "TS028": {
-      "name": "National identity (detailed)",
-      "table_names": [
-        "census2021-ts028-msoa",
-        "census2021-ts028-ltla",
-        "census2021-ts028-ctry",
-        "census2021-ts028-oa",
-        "census2021-ts028-rgn",
-        "census2021-ts028-utla",
-        "census2021-ts028-lsoa"
-      ]
-    },
-    "TS029": {
-      "name": "Proficiency in english",
-      "table_names": [
-        "census2021-ts029-msoa",
-        "census2021-ts029-ltla",
-        "census2021-ts029-ctry",
-        "census2021-ts029-oa",
-        "census2021-ts029-rgn",
-        "census2021-ts029-utla",
-        "census2021-ts029-lsoa"
-      ]
-    },
-    "TS030": {
-      "name": "Religion",
-      "table_names": [
-        "census2021-ts030-msoa",
-        "census2021-ts030-ltla",
-        "census2021-ts030-ctry",
-        "census2021-ts030-oa",
-        "census2021-ts030-rgn",
-        "census2021-ts030-utla",
-        "census2021-ts030-lsoa"
-      ]
-    },
-    "TS031": {
-      "name": "Religion (detailed)",
-      "table_names": [
-        "census2021-ts031-msoa",
-        "census2021-ts031-ltla",
-        "census2021-ts031-ctry",
-        "census2021-ts031-oa",
-        "census2021-ts031-rgn",
-        "census2021-ts031-utla",
-        "census2021-ts031-lsoa"
-      ]
-    },
-    "TS075": {
-      "name": "Multi religion households",
-      "table_names": [
-        "census2021-ts075-msoa",
-        "census2021-ts075-ltla",
-        "census2021-ts075-ctry",
-        "census2021-ts075-oa",
-        "census2021-ts075-rgn",
-        "census2021-ts075-utla",
-        "census2021-ts075-lsoa"
-      ]
-    }
+  "UV205": {
+    "name": "Religion",
+    "table_names": [
+      "census2022-uv205-ctry",
+      "census2022-uv205-ca",
+      "census2022-uv205-oa"
+    ]
+  },
+  "TS001": {
+    "name": "Number of usual residents in households and communal establishments",
+    "table_names": [
+      "census2021-ts001-msoa",
+      "census2021-ts001-ltla",
+      "census2021-ts001-ctry",
+      "census2021-ts001-oa",
+      "census2021-ts001-rgn",
+      "census2021-ts001-utla",
+      "census2021-ts001-lsoa"
+    ]
+  },
+  "TS002": {
+    "name": "Legal partnership status",
+    "table_names": [
+      "census2021-ts002-msoa",
+      "census2021-ts002-ltla",
+      "census2021-ts002-ctry",
+      "census2021-ts002-oa",
+      "census2021-ts002-rgn",
+      "census2021-ts002-utla",
+      "census2021-ts002-lsoa"
+    ]
+  },
+  "TS003": {
+    "name": "Household composition",
+    "table_names": [
+      "census2021-ts003-msoa",
+      "census2021-ts003-ltla",
+      "census2021-ts003-ctry",
+      "census2021-ts003-oa",
+      "census2021-ts003-rgn",
+      "census2021-ts003-utla",
+      "census2021-ts003-lsoa"
+    ]
+  },
+  "TS004": {
+    "name": "Country of birth",
+    "table_names": [
+      "census2021-ts004-msoa",
+      "census2021-ts004-ltla",
+      "census2021-ts004-ctry",
+      "census2021-ts004-oa",
+      "census2021-ts004-rgn",
+      "census2021-ts004-utla",
+      "census2021-ts004-lsoa"
+    ]
+  },
+  "TS005": {
+    "name": "Passports held",
+    "table_names": [
+      "census2021-ts005-msoa",
+      "census2021-ts005-ltla",
+      "census2021-ts005-ctry",
+      "census2021-ts005-oa",
+      "census2021-ts005-rgn",
+      "census2021-ts005-utla",
+      "census2021-ts005-lsoa"
+    ]
+  },
+  "TS006": {
+    "name": "Population density",
+    "table_names": [
+      "census2021-ts006-msoa",
+      "census2021-ts006-ltla",
+      "census2021-ts006-ctry",
+      "census2021-ts006-oa",
+      "census2021-ts006-rgn",
+      "census2021-ts006-utla",
+      "census2021-ts006-lsoa"
+    ]
+  },
+  "TS007": {
+    "name": "Age by single year of age",
+    "table_names": [
+      "census2021-ts007-msoa",
+      "census2021-ts007-ltla",
+      "census2021-ts007-ctry",
+      "census2021-ts007-oa",
+      "census2021-ts007-rgn",
+      "census2021-ts007-utla",
+      "census2021-ts007-lsoa"
+    ]
+  },
+  "TS007A": {
+    "name": "Age by five-year age bands",
+    "table_names": [
+      "census2021-ts007a-msoa",
+      "census2021-ts007a-ltla",
+      "census2021-ts007a-ctry",
+      "census2021-ts007a-oa",
+      "census2021-ts007a-rgn",
+      "census2021-ts007a-utla",
+      "census2021-ts007a-lsoa"
+    ]
+  },
+  "TS008": {
+    "name": "Sex",
+    "table_names": [
+      "census2021-ts008-msoa",
+      "census2021-ts008-ltla",
+      "census2021-ts008-ctry",
+      "census2021-ts008-oa",
+      "census2021-ts008-rgn",
+      "census2021-ts008-utla",
+      "census2021-ts008-lsoa"
+    ]
+  },
+  "TS009": {
+    "name": "Sex by single year of age",
+    "table_names": [
+      "census2021-ts009-msoa",
+      "census2021-ts009-ltla",
+      "census2021-ts009-ctry",
+      "census2021-ts009-oa",
+      "census2021-ts009-rgn",
+      "census2021-ts009-utla",
+      "census2021-ts009-lsoa"
+    ]
+  },
+  "TS010": {
+    "name": "Living arrangements",
+    "table_names": [
+      "census2021-ts010-msoa",
+      "census2021-ts010-ltla",
+      "census2021-ts010-ctry",
+      "census2021-ts010-oa",
+      "census2021-ts010-rgn",
+      "census2021-ts010-utla",
+      "census2021-ts010-lsoa"
+    ]
+  },
+  "TS011": {
+    "name": "Households by deprivation dimensions",
+    "table_names": [
+      "census2021-ts011-msoa",
+      "census2021-ts011-ltla",
+      "census2021-ts011-ctry",
+      "census2021-ts011-oa",
+      "census2021-ts011-rgn",
+      "census2021-ts011-utla",
+      "census2021-ts011-lsoa"
+    ]
+  },
+  "TS012": {
+    "name": "Country of birth (detailed)",
+    "table_names": [
+      "census2021-ts012-msoa",
+      "census2021-ts012-ltla",
+      "census2021-ts012-ctry",
+      "census2021-ts012-oa",
+      "census2021-ts012-rgn",
+      "census2021-ts012-utla",
+      "census2021-ts012-lsoa"
+    ]
+  },
+  "TS013": {
+    "name": "Passports held (detailed)",
+    "table_names": [
+      "census2021-ts013-msoa",
+      "census2021-ts013-ltla",
+      "census2021-ts013-ctry",
+      "census2021-ts013-oa",
+      "census2021-ts013-rgn",
+      "census2021-ts013-utla",
+      "census2021-ts013-lsoa"
+    ]
+  },
+  "TS015": {
+    "name": "Year of arrival in UK",
+    "table_names": [
+      "census2021-ts015-msoa",
+      "census2021-ts015-ltla",
+      "census2021-ts015-ctry",
+      "census2021-ts015-oa",
+      "census2021-ts015-rgn",
+      "census2021-ts015-utla",
+      "census2021-ts015-lsoa"
+    ]
+  },
+  "TS016": {
+    "name": "Length of residence",
+    "table_names": [
+      "census2021-ts016-msoa",
+      "census2021-ts016-ltla",
+      "census2021-ts016-ctry",
+      "census2021-ts016-oa",
+      "census2021-ts016-rgn",
+      "census2021-ts016-utla",
+      "census2021-ts016-lsoa"
+    ]
+  },
+  "TS017": {
+    "name": "Household size",
+    "table_names": [
+      "census2021-ts017-msoa",
+      "census2021-ts017-ltla",
+      "census2021-ts017-ctry",
+      "census2021-ts017-oa",
+      "census2021-ts017-rgn",
+      "census2021-ts017-utla",
+      "census2021-ts017-lsoa"
+    ]
+  },
+  "TS018": {
+    "name": "Age of arrival in the UK",
+    "table_names": [
+      "census2021-ts018-msoa",
+      "census2021-ts018-ltla",
+      "census2021-ts018-ctry",
+      "census2021-ts018-oa",
+      "census2021-ts018-rgn",
+      "census2021-ts018-utla",
+      "census2021-ts018-lsoa"
+    ]
+  },
+  "TS019": {
+    "name": "Migrant Indicator",
+    "table_names": [
+      "census2021-ts019-msoa",
+      "census2021-ts019-ltla",
+      "census2021-ts019-ctry",
+      "census2021-ts019-oa",
+      "census2021-ts019-rgn",
+      "census2021-ts019-utla",
+      "census2021-ts019-lsoa"
+    ]
+  },
+  "TS020": {
+    "name": "Number of non-UK short-term residents by sex",
+    "table_names": [
+      "census2021-ts020-msoa",
+      "census2021-ts020-ltla",
+      "census2021-ts020-ctry",
+      "census2021-ts020-oa",
+      "census2021-ts020-rgn",
+      "census2021-ts020-utla",
+      "census2021-ts020-lsoa"
+    ]
+  },
+  "TS041": {
+    "name": "Number of Households",
+    "table_names": [
+      "census2021-ts041-msoa",
+      "census2021-ts041-ltla",
+      "census2021-ts041-ctry",
+      "census2021-ts041-oa",
+      "census2021-ts041-rgn",
+      "census2021-ts041-utla",
+      "census2021-ts041-lsoa"
+    ]
+  },
+  "TS021": {
+    "name": "Ethnic group",
+    "table_names": [
+      "census2021-ts021-msoa",
+      "census2021-ts021-ltla",
+      "census2021-ts021-ctry",
+      "census2021-ts021-oa",
+      "census2021-ts021-rgn",
+      "census2021-ts021-utla",
+      "census2021-ts021-lsoa"
+    ]
+  },
+  "TS022": {
+    "name": "Ethnic group (detailed)",
+    "table_names": [
+      "census2021-ts022-rgn",
+      "census2021-ts022-utla",
+      "census2021-ts022-ctry",
+      "census2021-ts022-ltla",
+      "census2021-ts022-msoa"
+    ]
+  },
+  "TS023": {
+    "name": "Multiple ethnic group",
+    "table_names": [
+      "census2021-ts023-msoa",
+      "census2021-ts023-ltla",
+      "census2021-ts023-ctry",
+      "census2021-ts023-oa",
+      "census2021-ts023-rgn",
+      "census2021-ts023-utla",
+      "census2021-ts023-lsoa"
+    ]
+  },
+  "TS024": {
+    "name": "Main language (detailed)",
+    "table_names": [
+      "census2021-ts024-msoa",
+      "census2021-ts024-ltla",
+      "census2021-ts024-ctry",
+      "census2021-ts024-oa",
+      "census2021-ts024-rgn",
+      "census2021-ts024-utla",
+      "census2021-ts024-lsoa"
+    ]
+  },
+  "TS025": {
+    "name": "Household language",
+    "table_names": [
+      "census2021-ts025-msoa",
+      "census2021-ts025-ltla",
+      "census2021-ts025-ctry",
+      "census2021-ts025-oa",
+      "census2021-ts025-rgn",
+      "census2021-ts025-utla",
+      "census2021-ts025-lsoa"
+    ]
+  },
+  "TS026": {
+    "name": "Multiple main languages in households",
+    "table_names": [
+      "census2021-ts026-msoa",
+      "census2021-ts026-ltla",
+      "census2021-ts026-ctry",
+      "census2021-ts026-oa",
+      "census2021-ts026-rgn",
+      "census2021-ts026-utla",
+      "census2021-ts026-lsoa"
+    ]
+  },
+  "TS027": {
+    "name": "National identity - UK",
+    "table_names": [
+      "census2021-ts027-msoa",
+      "census2021-ts027-ltla",
+      "census2021-ts027-ctry",
+      "census2021-ts027-oa",
+      "census2021-ts027-rgn",
+      "census2021-ts027-utla",
+      "census2021-ts027-lsoa"
+    ]
+  },
+  "TS028": {
+    "name": "National identity (detailed)",
+    "table_names": [
+      "census2021-ts028-msoa",
+      "census2021-ts028-ltla",
+      "census2021-ts028-ctry",
+      "census2021-ts028-oa",
+      "census2021-ts028-rgn",
+      "census2021-ts028-utla",
+      "census2021-ts028-lsoa"
+    ]
+  },
+  "TS029": {
+    "name": "Proficiency in english",
+    "table_names": [
+      "census2021-ts029-msoa",
+      "census2021-ts029-ltla",
+      "census2021-ts029-ctry",
+      "census2021-ts029-oa",
+      "census2021-ts029-rgn",
+      "census2021-ts029-utla",
+      "census2021-ts029-lsoa"
+    ]
+  },
+  "TS030": {
+    "name": "Religion",
+    "table_names": [
+      "census2021-ts030-msoa",
+      "census2021-ts030-ltla",
+      "census2021-ts030-ctry",
+      "census2021-ts030-oa",
+      "census2021-ts030-rgn",
+      "census2021-ts030-utla",
+      "census2021-ts030-lsoa"
+    ]
+  },
+  "TS031": {
+    "name": "Religion (detailed)",
+    "table_names": [
+      "census2021-ts031-msoa",
+      "census2021-ts031-ltla",
+      "census2021-ts031-ctry",
+      "census2021-ts031-oa",
+      "census2021-ts031-rgn",
+      "census2021-ts031-utla",
+      "census2021-ts031-lsoa"
+    ]
+  },
+  "TS075": {
+    "name": "Multi religion households",
+    "table_names": [
+      "census2021-ts075-msoa",
+      "census2021-ts075-ltla",
+      "census2021-ts075-ctry",
+      "census2021-ts075-oa",
+      "census2021-ts075-rgn",
+      "census2021-ts075-utla",
+      "census2021-ts075-lsoa"
+    ]
   }
+}
+
