@@ -1,0 +1,23 @@
+# config/prompts.yaml
+
+geography_codes:
+  oa: "Use by default unless another area is specified. The lowest level of geography for which statistics are produced."
+  ltla: "Lower tier local authorities including non-metropolitan districts, unitary authorities, metropolitan districts, and London boroughs."
+  lsoa: "Lower layer Super Output Areas"
+  msoa: "Middle layer Super Output Areas"
+  utla: "Upper-Tier Local Authorities"
+  rgn: "Region"
+  ctry: "Country"
+
+prompts:
+  dataset_selection:
+    description: "Select the relevant dataset codes using the descriptions below, that can be used to answer the provided query. Return only the dataset codes as a comma separated list, without descriptions."
+  sql_generation:
+    description: |
+      Use the provided question to write an SQL query for a PostgreSQL database using the schema(s) and Geography Codes below.
+      - Return only the SQL query as a string.
+      - Ensure to match the column name exactly.
+      - Wrap column names in double quotes.
+      - Use the {table code}-{geography code} pair in your query, for example "ts0001-oa", "ts0002-ltla" etc.
+      - Always include "geography" and "geography_code" at the start of the list of selected columns, even if they are not explicitly mentioned in the statement.
+      - If the question doesn't make sense or doesn't relate to the schemas, simply return "invalid question".

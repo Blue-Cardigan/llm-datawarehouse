@@ -16,26 +16,24 @@
   "dependencies": {
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "csv-parser": "^3.0.0",
     "dotenv": "^10.0.0",
     "express": "^4.19.2",
-    "firebase-tools": "^13.10.1",
-    "fs": "0.0.1-security",
+    "jest": "^29.7.0",
+    "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
-    "openai": "^4.47.1",
-    "papaparse": "^5.4.1",
+    "openai": "^4.51.0",
     "pg": "^8.11.5",
+    "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "^5.0.1",
-    "set-value": "^4.1.0",
-    "update": "^0.4.2"
+    "resolve-url-loader": "^4.0.0",
+    "svgo": "^2.8.0",
+    "workbox-webpack-plugin": "^7.1.0"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.22"
   },
   "engines": {
     "node": ">=14.0.0"
