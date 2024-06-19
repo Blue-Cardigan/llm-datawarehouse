@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function Login({ setLoginState }) {
+function Login({ onLogin }) {  // Change setLoginState to onLogin
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -11,7 +11,7 @@ function Login({ setLoginState }) {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { username, password });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('username', username);  // Store username in localStorage
-      setLoginState(true, username);
+      onLogin(username);  // Call onLogin with the username
     } catch (error) {
       alert('Invalid username or password');
     }

@@ -177,11 +177,14 @@ async function convertToSQL(query, schemas) {
 async function login(req, res, next) {
   try {
     const { username, password } = req.body;
+    console.log(`Login attempt for username: ${username}`);
+    
     const client = await pool.connect();
     const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
     client.release();
 
     if (result.rows.length === 0) {
+      console.log('Invalid username');
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
@@ -189,12 +192,14 @@ async function login(req, res, next) {
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
+      console.log('Invalid password');
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    const token = jwt.sign({ userId: user.id }, secretKey, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.username }, secretKey, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
+    console.error('Error during login:', error);
     next(error);
   }
 }

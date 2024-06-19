@@ -44,7 +44,7 @@ function App() {
   };
 
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} />;  // Pass handleLogin as onLogin
   }
 
   return (
