@@ -62,6 +62,19 @@ async function getLargeRegions(req, res, next) {
   }
 }
 
+async function returnTableDetails(req, res, next) {
+  try {
+    const client = await pool.connect();
+    const query = `SELECT code, name FROM table_titles;`;
+    const result = await client.query(query);
+    client.release();
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error in returnTableDetails:', error);
+    next(new Error('Failed to fetch table details'));
+  }
+}
+
 async function returnSchemas(query) {
   try {
     const client = await pool.connect();
@@ -504,6 +517,7 @@ module.exports = {
   mapHashedToOriginal,
   login,
   getSubregions,
+  returnTableDetails,
   getOutputAreas,
   getColumnNames,
   paramQuery,

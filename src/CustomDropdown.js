@@ -1,12 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import useFetchData from './hooks/useFetchData'; // Adjust the path as necessary
 import './index.css';
 
-const CustomDropdown = ({ options, value, onChange, placeholder }) => {
+const CustomDropdown = ({ value, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [filteredOptions, setFilteredOptions] = useState(options);
   const dropdownRef = useRef(null);
+
+  const { data: options, isLoading, error } = useFetchData('/tabledetails');
+
+  const [filteredOptions, setFilteredOptions] = useState([]);
+
+  useEffect(() => {
+    if (options) {
+      setFilteredOptions(options);
+    }
+  }, [options]);
 
   const handleInputChange = (e) => {
     const newValue = e.target.value;
@@ -39,6 +49,14 @@ const CustomDropdown = ({ options, value, onChange, placeholder }) => {
     };
   }, []);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading options</div>;
+  }
+
   return (
     <div className="custom-dropdown" ref={dropdownRef}>
       <input
@@ -67,12 +85,6 @@ const CustomDropdown = ({ options, value, onChange, placeholder }) => {
 };
 
 CustomDropdown.propTypes = {
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      code: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
   value: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import tableDetails from './table_details.json';
 import TableDisplay from './TableDisplay';
 import useFetchData from './hooks/useFetchData';
 import useFormState from './hooks/useFormState';
@@ -165,11 +164,6 @@ const SearchAndFilter = () => {
     }
   };
 
-  const tableOptions = Object.entries(tableDetails).map(([code, details]) => ({
-    code,
-    name: details.name,
-  }));
-
   const preprocessColumnNames = (columns) => {
     if (columns.length === 0) return columns;
 
@@ -210,7 +204,6 @@ const SearchAndFilter = () => {
                 <div className="table-select">
                   <label>
                     <CustomDropdown
-                      options={tableOptions}
                       value={formData.selectedTable}
                       onChange={handleChange}
                       placeholder="Search Datasets"
