@@ -1,14 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   const [showQuery, setShowQuery] = useState(false);
 
   // Define columns to exclude
-  const excludedColumns = ['id', 'Counting'];
+  const excludedColumns = ['Counting'];
+
+  // Define column name replacements
+  const columnReplacements = { 
+    'geocode': 'Geography Code',
+    'geoname': 'Geography Name'
+  };
 
   if (!data || data.length === 0) {
     return null;
   }
+
+  // Function to split long column names into multiple lines
+  const splitColumnName = (name) => {
+    const maxWordsPerLine = 5; // Maximum number of words per line
+    const words = name.split(' ');
+    let lines = [];
+    let currentLine = [];
+
+    words.forEach(word => {
+      if (currentLine.length >= maxWordsPerLine) {
+        lines.push(currentLine.join(' '));
+        currentLine = [];
+      }
+      currentLine.push(word);
+    });
+
+    if (currentLine.length > 0) {
+      lines.push(currentLine.join(' '));
+    }
+
+    return lines.join('\n');
+  };
 
   // Function to render table headers
   const renderTableHeader = () => {
@@ -16,7 +44,9 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
       return Object.keys(data[0])
         .filter(key => !excludedColumns.includes(key))
         .map((key, index) => {
-          return <th key={index}>{key.toUpperCase()}</th>;
+          const displayName = columnReplacements[key] || key;
+          const splitName = splitColumnName(displayName);
+          return <th key={index}>{splitName}</th>;
         });
     }
   };
@@ -44,12 +74,15 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   // Function to convert data to CSV and trigger download
   const downloadCSV = () => {
     const csvRows = [];
-    const headers = Object.keys(data[0]).filter(key => !excludedColumns.includes(key));
+    const headers = Object.keys(data[0])
+      .filter(key => !excludedColumns.includes(key))
+      .map(key => columnReplacements[key] || key);
     csvRows.push(headers.join(',')); // Add header row
 
     for (const row of data) {
       const values = headers.map(header => {
-        const escaped = ('' + row[header]).replace(/"/g, '\\"'); // Escape double quotes
+        const originalKey = Object.keys(columnReplacements).find(key => columnReplacements[key] === header) || header;
+        const escaped = ('' + row[originalKey]).replace(/"/g, '\\"'); // Escape double quotes
         return `"${escaped}"`;
       });
       csvRows.push(values.join(','));
@@ -81,7 +114,7 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
           <button onClick={downloadCSV}>
             Download CSV
           </button>
-        </>
+        </> 
       )}
       {showQuery && (
         <div className="query-display">

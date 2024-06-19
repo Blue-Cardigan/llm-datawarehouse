@@ -21,8 +21,7 @@ const CustomDropdown = ({ options, value, onChange, placeholder }) => {
   };
 
   const handleOptionClick = (option) => {
-    const displayValue = `${option.name} - ${option.code}`;
-    setInputValue(displayValue);
+    setInputValue(option.name);
     onChange({ target: { name: 'selectedTable', value: option.code } });
     setIsOpen(false);
   };
@@ -58,7 +57,7 @@ const CustomDropdown = ({ options, value, onChange, placeholder }) => {
               onClick={() => handleOptionClick(option)}
               className="dropdown-option"
             >
-              <strong>{option.name}</strong> - {option.code}
+              {option.name}
             </li>
           ))}
         </ul>
