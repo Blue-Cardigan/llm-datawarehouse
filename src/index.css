@@ -282,7 +282,6 @@ button {
   border-radius: 2px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  max-width: 50%;
 }
 
 button.selected {
