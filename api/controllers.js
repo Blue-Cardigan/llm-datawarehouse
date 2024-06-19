@@ -63,19 +63,29 @@ async function getLargeRegions(req, res, next) {
 }
 
 async function returnSchemas(query) {
-  const datasetsPath = path.join(__dirname, 'table_titles.json');
-  const datasetsJson = JSON.parse(fs.readFileSync(datasetsPath, 'utf8'));
-  const datasetDescriptions = datasetsJson.EW;
-
-  let descriptionsText = "";
-  for (const [key, description] of Object.entries(datasetDescriptions)) {
-    descriptionsText += `${key}: ${description}\n`;
-  }
-
-  const prompt = `${promptsData.prompts.dataset_selection.description}\n\nQuery: ${query}\n\nDataset Codes with Descriptions:\n${descriptionsText}`;
-  console.log("selecting datasets");
-
   try {
+    const client = await pool.connect();
+
+    // Fetch dataset descriptions from the remote table
+    const datasetsQuery = `
+      SELECT country, code, name
+      FROM table_titles;
+    `;
+    const datasetsResult = await client.query(datasetsQuery);
+    client.release();
+
+    const datasetDescriptions = datasetsResult.rows.reduce((acc, row) => {
+      acc[row.code] = row.name;
+      return acc;
+    }, {});
+
+    let descriptionsText = "";
+    for (const [key, description] of Object.entries(datasetDescriptions)) {
+      descriptionsText += `${key}: ${description}\n`;
+    }
+
+    const prompt = `###Instruction###\n${promptsData.prompts.dataset_selection.description}\n###\n###Query###\n${query}\n###\n###Dataset Codes with Descriptions###\ncode | description\n${descriptionsText}`;
+    console.log("selecting datasets with prompt: ", prompt);
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -86,39 +96,38 @@ async function returnSchemas(query) {
       ],
     });
 
-    const regex = /TS\d+[A-Z]?/g;
+    const regex = /ts\d+[A-Z]?/g;
     const matches = completion.choices[0].message.content.match(regex);
-    const dataset_list = matches ? matches.map(title => title.trim().toLowerCase().replace(/\s/g, '')) : [];
+    console.log("Selected datasets:", matches)
+    const dataset_list = matches ? matches.map(title => title.trim().replace(/\s/g, '')) : [];
 
-    const tableNames = dataset_list.map(dataset => `census2021-${dataset.toLowerCase()}-ltla`);
+    const tableNames = dataset_list.map(dataset => `census2021-${dataset.toLowerCase()}-ctry`);
+    const columnNameMappings = await mapHashedToOriginal();
     let schemaDescriptions = [];
     for (const tableName of tableNames) {
       const queryText = `
         SELECT column_name, data_type
         FROM information_schema.columns
-        WHERE table_name = $1;
+        WHERE table_name = $1
+        AND column_name NOT IN ('geocode', 'geoname');
       `;
       const client = await pool.connect();
       const result = await client.query(queryText, [tableName]);
       client.release();
 
-      const descriptions = await Promise.all(result.rows.map(async (row) => {
-        const exampleQuery = `SELECT "${row.column_name}" FROM "${tableName}" LIMIT 1;`;
-        const exampleResult = await client.query(exampleQuery);
-        const exampleValue = exampleResult.rows.length > 0 ? exampleResult.rows[0][row.column_name] : 'No data';
-        return `${row.column_name} (${row.data_type}) | Example value: ${exampleValue}`;
-      }));
-
+      const descriptions = result.rows.map(row => {
+        const originalName = columnNameMappings[row.column_name] || row.column_name;
+        return `${originalName} (${row.data_type})`;
+      });
       const description = descriptions.join('\n');
-      const datasetKey = tableName.replace('census2021-', '').replace('-ctry', '');
-      const datasetDescription = datasetDescriptions[datasetKey.toUpperCase()];
-      schemaDescriptions.push(`*${datasetKey} - ${datasetDescription}:*\n${description}\n\n`);
-    }
-
-    return schemaDescriptions;
-  } catch (error) {
-    console.error('Error generating text:', error);
-    throw new Error('Failed to generate SQL query');
+      const datasetKey = tableName.replace('census2021-', '').replace('-ctry', ''); 
+      const datasetDescription = datasetDescriptions[datasetKey]; 
+      schemaDescriptions.push(`# Table Code: ${datasetKey}\n# Table Name: ${datasetDescription}\n# Columns:\n${description}\n\n`); 
+    } 
+    return schemaDescriptions; 
+  } catch (error) { 
+    console.error('Error generating text:', error); 
+    throw new Error('Failed to generate SQL query'); 
   }
 }
 
@@ -401,9 +410,10 @@ async function llmQuery(req, res, next) {
   if (!query) {
     return res.status(400).json({ error: 'Query is required' });
   }
+  console.log(query)
 
   let sqlQuery = "";
-  let attempt = 0;
+  let attempt = 0; 
   const maxAttempts = 2;
 
   try {
@@ -430,6 +440,7 @@ async function llmQuery(req, res, next) {
     while (attempt < maxAttempts) {
       try {
         const dbResponse = await client.query(sqlQuery);
+        console.log(`sqlQuery after fix attempt ${attempt}: ${sqlQuery}`);
         client.release();
         const transformedData = dbResponse.rows.map(row => {
           const transformedRow = {};
@@ -472,7 +483,6 @@ async function llmQuery(req, res, next) {
         sqlQuery = completion.choices[0].message.content;
         sqlQuery = sqlQuery.replace(/```sql/g, '').replace(/```/g, '').trim();
         sqlQuery = sqlQuery.replace(/^"(.*)"$/, '$1');
-        sqlQuery = sqlQuery.replace(/\bts(\d{3})\b/g, 'census2021-ts$1');
 
         Object.keys(columnNameMappings).forEach(originalName => {
           const hashedName = `${columnNameMappings[originalName]}`;

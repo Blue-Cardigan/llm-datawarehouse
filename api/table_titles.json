@@ -23,36 +23,6 @@
     "TS041": "Number of Households"
   },
   "SC": {
-    "British Sign Language": "UV211",
-    "British Sign Language by age (6)": "UV211b",
-    "British Sign Language by sex by age (20)": "UV211a",
-    "Country of birth": "UV204",
-    "Country of birth (14) by age (6)": "UV204b",
-    "Country of birth (24) by sex by age (20)": "UV204a",
-    "English language skills": "UV210",
-    "English language skills (10) by sex by age (20)": "UV210a",
-    "English language skills (6) by age (6)": "UV210b",
-    "Ethnic group": "UV201",
-    "Ethnic group (19) by age (6)": "UV201b",
-    "Ethnic group (21) by sex by age (20)": "UV201a",
-    "Gaelic language skills": "UV208",
-    "Gaelic language skills (2) by age (6)": "UV208b",
-    "Gaelic language skills (7) by sex by age (20)": "UV208a",
-    "Main language": "UV212",
-    "Main language (5) by age (6)": "UV212b",
-    "Main language (5) by sex by age (20)": "UV212a",
-    "Multiple ethnic groups": "UV203",
-    "National identity": "UV202",
-    "National identity (8) by sex by age (20)": "UV202a",
-    "National identity (8) by sex by age (6)": "UV202b",
-    "Passports held": "UV206",
-    "Passports held (9) by sex by age (20)": "UV206a",
-    "Passports held (9) by sex by age (6)": "UV206b",
-    "Religion": "UV205",
-    "Religion (12) by sex by age (20)": "UV205a",
-    "Religion (12) by sex by age (6)": "UV205b",
-    "Scots language skills": "UV209",
-    "Scots language skills (7) by age (6)": "UV209b",
-    "Scots language skills (7) by sex by age (20)": "UV209a"
+    "uv205": "Religion"
   }
 }

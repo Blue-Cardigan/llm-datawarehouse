@@ -60,15 +60,15 @@ export default function LlmQueryForm({ setActiveTab }) {
   };
 
   const exampleQueries = [
-    "How many households in the North East region are composed of single family households with dependent children as of 2021?",
-    "List the total number of residents holding British passports in London boroughs in the year 2021.",
-    "Retrieve the number of one-person households aged 66 years and over in County Durham during 2021.",
-    "Provide the number of people with Irish passports in Middle layer Super Output Areas of Liverpool for 2021.",
-    "What is the number of Asian British or Asian Welsh individuals in the Upper-Tier Local Authorities of Manchester as reported in 2021?",
+    "How many households in the North East region are composed of single family households with dependent children?",
+    "List the total number of residents holding British passports in London boroughs.",
+    "Retrieve the number of one-person households aged 66 years and over in County Durham.",
+    "Provide the number of people with Irish passports in Middle layer Super Output Areas of Liverpool.",
+    "What is the number of Asian British or Asian Welsh individuals in the Upper-Tier Local Authorities of Manchester?",
     "How many households in the West Midlands region are deprived in three dimensions as of the latest census data?",
-    "Determine the total number of usual residents in households in Hartlepool's Lower layer Super Output Areas as of 2021.",
-    "Calculate the number of individuals who identify as having a Scottish only national identity in Scotland for 2021.",
-    "Show the age distribution of the population in five-year age bands within the East Midlands region for the year 2021.",
+    "Determine the total number of usual residents in households in Hartlepool's Lower layer Super Output Areas.",
+    "Calculate the number of individuals who identify as having a Scottish only national identity in Scotland.",
+    "Show the age distribution of the population in five-year age bands within the East Midlands region.",
     "What are the population density figures for each Metropolitan District within the West Yorkshire area as per the latest census?"
   ]
 
