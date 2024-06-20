@@ -110,9 +110,19 @@ async function getElectionFilters(req, res, next) {
       return partyColumns.indexOf(a) - partyColumns.indexOf(b);
     });
 
+    // Capitalize party names
+    const capitalize = (str) => {
+      str = str.replace(/_/g, ' ');
+      if (str.length < 5) {
+        return str.toUpperCase();
+      }
+      return str.replace(/\b\w/g, char => char.toUpperCase());
+    };
+    const capitalizedParties = sortedParties.map(capitalize);
+
     res.json({
       years: result.rows[0].years,
-      parties: sortedParties,
+      parties: capitalizedParties,
       constituencies: result.rows[0].constituencies
     });
   } catch (error) {

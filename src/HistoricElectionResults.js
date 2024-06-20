@@ -13,7 +13,7 @@ function HistoricElectionResults() {
   const [sqlQuery, setSqlQuery] = useState('');
   const [filters, setFilters] = useState({ years: [], parties: [], constituencies: [] });
   const [isLoading, setIsLoading] = useState(false);
-  const [alluvialData, setAlluvialData] = useState(null);
+  const [chartData, setChartData] = useState(null);
   const cache = useRef({});
 
   useEffect(() => {
@@ -40,7 +40,7 @@ function HistoricElectionResults() {
     if (cache.current[cacheKey]) {
       setData(cache.current[cacheKey].data);
       setSqlQuery(cache.current[cacheKey].sqlQuery);
-      updateAlluvialData(cache.current[cacheKey].data);
+      updateChartData(cache.current[cacheKey].data);
       return;
     }
 
@@ -57,7 +57,7 @@ function HistoricElectionResults() {
         data: response.data.data,
         sqlQuery: response.data.sqlQuery
       };
-      updateAlluvialData(response.data.data);
+      updateChartData(response.data.data);
       console.log(cache.current[cacheKey]);
     } catch (error) {
       console.error('Error fetching election results:', error);
@@ -65,8 +65,8 @@ function HistoricElectionResults() {
     setIsLoading(false);
   };
 
-  const updateAlluvialData = (data) => {
-    const alluvialJson = years.map(year => {
+  const updateChartData = (data) => {
+    const chartJson = years.map(year => {
       const yearData = data.filter(item => item.Year === parseInt(year));
       const partyData = {};
       
@@ -91,11 +91,7 @@ function HistoricElectionResults() {
       };
     });
 
-    setAlluvialData(JSON.stringify(alluvialJson));
-  };
-
-  const capitalize = (str) => {
-    return str.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    setChartData(JSON.stringify(chartJson));
   };
 
   return (
@@ -119,7 +115,7 @@ function HistoricElectionResults() {
             id="party"
             value={parties}
             onChange={setParties}
-            options={filters.parties.map(p => ({ code: p, name: capitalize(p) }))}
+            options={filters.parties.map(p => ({ code: p, name: p }))}
             placeholder="Select Parties"
             multiple={true}
           />
@@ -140,7 +136,7 @@ function HistoricElectionResults() {
         <p>Loading...</p>
       ) : (
         <>
-          {alluvialData && <Chart data={alluvialData} />}
+          {chartData && <Chart data={chartData} />}
           <ElectionsDisplay data={data} sqlQuery={sqlQuery} />
         </>
       )}
