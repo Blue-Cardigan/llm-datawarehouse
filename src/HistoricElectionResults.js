@@ -58,7 +58,6 @@ function HistoricElectionResults() {
         sqlQuery: response.data.sqlQuery
       };
       updateChartData(response.data.data);
-      console.log(cache.current[cacheKey]);
     } catch (error) {
       console.error('Error fetching election results:', error);
     }
