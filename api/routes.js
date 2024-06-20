@@ -2,9 +2,11 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-const { login, getLargeRegions, getSubregions, getOutputAreas, getColumnNames, paramQuery, llmQuery, returnTableDetails } = require('./controllers');
+const { login, getLargeRegions, getSubregions, getOutputAreas, getColumnNames, paramQuery, llmQuery, returnTableDetails, getElectionResults, getElectionFilters } = require('./controllers');
 
 router.post('/login', login);
+router.get('/electionFilters', getElectionFilters);
+router.post('/elections', getElectionResults);
 router.get('/largeRegions', getLargeRegions);
 router.get('/subregions', getSubregions);
 router.get('/outputAreas', getOutputAreas);

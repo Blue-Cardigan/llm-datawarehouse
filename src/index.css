@@ -369,3 +369,48 @@ table {
   align-items: center;
   gap: 10px;
 }
+
+/* GridDropdown.css */
+.grid-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.grid-dropdown-header {
+  padding: 10px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  background-color: #171717;
+}
+
+.grid-dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #737272;
+  border: 1px solid #ccc;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 5px;
+  padding: 10px;
+}
+
+.grid-dropdown-item {
+  padding: 5px;
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid #5a5858;
+}
+
+.grid-dropdown-item:hover {
+  background-color: #969696;
+}
+
+.grid-dropdown-item.selected {
+  background-color: #797979;
+  font-weight: bold;
+}

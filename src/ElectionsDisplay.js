@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
-function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
+function ElectionsDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   const [showQuery, setShowQuery] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Define columns to exclude
   const excludedColumns = ['Counting'];
@@ -11,10 +12,6 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
     'geocode': 'Geography Code',
     'geoname': 'Geography Name'
   };
-
-  if (!Array.isArray(data) || data.length === 0) {
-    return null;
-  }
 
   // Function to split long column names into multiple lines
   const splitColumnName = (name) => {
@@ -38,6 +35,15 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
     return lines.join('\n');
   };
 
+  // Function to handle sorting
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
   // Function to render table headers
   const renderTableHeader = () => {
     if (data.length > 0) {
@@ -46,14 +52,36 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
         .map((key, index) => {
           const displayName = columnReplacements[key] || key;
           const splitName = splitColumnName(displayName);
-          return <th key={index}>{splitName}</th>;
+          const isSorted = sortConfig.key === key;
+          const sortIndicator = isSorted ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '';
+          return (
+            <th key={index} onClick={() => handleSort(key)}>
+              {splitName} {sortIndicator}
+            </th>
+          );
         });
     }
   };
 
+  // Function to sort data
+  const sortedData = useMemo(() => {
+    if (sortConfig.key) {
+      return [...data].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return data;
+  }, [data, sortConfig]);
+
   // Function to render table rows
   const renderTableRows = () => {
-    return data.map((row, index) => {
+    return sortedData.map((row, index) => {
       return (
         <tr key={index}>
           {Object.entries(row)
@@ -100,6 +128,10 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
     document.body.removeChild(a);
   };
 
+  if (!Array.isArray(data) || data.length === 0) {
+    return null;
+  }
+
   return (
     <div>
       <h2>Results</h2>
@@ -141,4 +173,4 @@ function TableDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   );
 }
 
-export default TableDisplay;
+export default ElectionsDisplay;

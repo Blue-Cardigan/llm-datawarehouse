@@ -7,9 +7,30 @@ function Header({ username, onLogout, activeTab, handleTabChange }) {
         <img src="/vault-logo.png" alt="App Logo" className="logo" />
       </div>
       <nav className="header-navigation">
-        <button className={`tab-button ${activeTab === 'search' ? 'active' : ''}`} onClick={() => handleTabChange('search')}>Search and Filter</button>
-        <button className={`tab-button ${activeTab === 'llmQuery' ? 'active' : ''}`} onClick={() => handleTabChange('llmQuery')}>LLM Query</button>
-        <button className={`tab-button ${activeTab === 'datasets' ? 'active' : ''}`} onClick={() => handleTabChange('datasets')}>View Datasets</button>
+        <button 
+          className={`tab-button ${activeTab === 'search' ? 'active' : ''}`} 
+          onClick={() => handleTabChange('search')}
+        >
+          Search and Filter
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'llmQuery' ? 'active' : ''}`} 
+          onClick={() => handleTabChange('llmQuery')}
+        >
+          LLM Query
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'electionResults' ? 'active' : ''}`} 
+          onClick={() => handleTabChange('electionResults')}
+        >
+          Historic Election Results
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'datasets' ? 'active' : ''}`} 
+          onClick={() => handleTabChange('datasets')}
+        >
+          View Datasets
+        </button>
       </nav>
       <div className="user-info">
         <span className="username">{username || 'Login'}</span>

@@ -62,6 +62,145 @@ async function getLargeRegions(req, res, next) {
   }
 }
 
+const partyColumns = [
+  'conservative_party', 'coalition_liberal', 'liberal', 'coalition_labour', 'labour', 'liberal_democrats', 
+  'plaid_cymru', 'snp', 'dup', 'liberal_democrat', 'ukip', 'green', 'brexit', 'alliance', 
+  'alliance_(northern_ireland)', 'common_wealth_movement', 'communist', 'constitutionalist', 'dup_(uuuc)', 
+  'independent', 'independent_conservative', 'independent_labour', 'independent_labour_party', 
+  'independent_liberal', 'independent_nationalist', 'independent_unionist', 'labour_unionist_(ireland)', 
+  'national', 'national_independent', 'national_labour', 'national_liberal', 'national_liberal/national_liberal_and_conservative', 
+  'nationalist(wales/scotland)', 'nationalist_(ireland)', 'northern_ireland_labour_party', 'other', 'oup', 'oup_(uuuc)', 
+  'pc/snp', 'sdlp', 'sf', 'sinn_fein', 'snp/plaid_cymru', 'ukup', 'unionist(pro-assembly)', 'unionist_(uuuc)', 'uu', 'uup', 
+  'vanguard_unionist_progressive_party_(uuuc)', 'workers_party'
+];
+
+async function getElectionFilters(req, res, next) {
+  try {
+    const client = await pool.connect();
+
+    let query = `
+      SELECT 
+        ARRAY_AGG(DISTINCT year ORDER BY year) AS years,
+        ARRAY_AGG(DISTINCT party) AS parties,
+        ARRAY_AGG(DISTINCT pconyynm ORDER BY pconyynm) AS constituencies
+      FROM (
+        SELECT 
+          year,
+          pconyynm,
+          unnest(ARRAY[${partyColumns.map(col => `'${col}'`).join(', ')}]) AS party
+        FROM election_results
+      ) subquery
+      WHERE party IS NOT NULL
+        AND party || '_votes' IN (
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'election_results' 
+            AND column_name LIKE '%_votes'
+            AND column_name NOT LIKE '%vote_share%'
+        )
+        AND (party || '_votes')::text != '0'
+        AND (party || '_votes')::text != ''
+    `;
+
+    const result = await client.query(query);
+    client.release();
+
+    // Sort parties based on the order in partyColumns
+    const sortedParties = result.rows[0].parties.sort((a, b) => {
+      return partyColumns.indexOf(a) - partyColumns.indexOf(b);
+    });
+
+    res.json({
+      years: result.rows[0].years,
+      parties: sortedParties,
+      constituencies: result.rows[0].constituencies
+    });
+  } catch (error) {
+    console.error('Error in getElectionFilters:', error);
+    next(new Error('Failed to fetch election filters'));
+  }
+}
+
+async function getElectionResults(req, res, next) {
+  try {
+    const { years, parties, constituencies } = req.body;
+
+    let query = 'SELECT * FROM election_results WHERE 1=1';
+    const params = [];
+    if (years && years.length > 0) {
+      query += ` AND year = ANY($${params.length + 1})`;
+      params.push(years);
+    }
+
+    if (parties && parties.length > 0) {
+      const validParties = parties.filter(party => partyColumns.includes(party));
+
+      if (validParties.length > 0) {
+        const partyConditions = validParties.map(party => `"${party}_votes" IS NOT NULL`);
+        query += ` AND (${partyConditions.join(' OR ')})`;
+      }
+    }
+
+    if (constituencies && constituencies.length > 0) {
+      query += ` AND pconyynm = ANY($${params.length + 1})`;
+      params.push(constituencies);
+    }
+
+    const client = await pool.connect();
+    const result = await client.query(query, params);
+
+    if (result.rows.length === 0) {
+      client.release();
+      return res.json({ sqlQuery: query, data: [] });
+    }
+
+    // Get the columns with non-null values
+    const columns = Object.keys(result.rows[0]).filter(column => {
+      return result.rows.some(row => row[column] !== null) && 
+             column !== 'pconyynm_year' && 
+             column !== 'original_year';
+    });
+
+    // Construct the final query with the selected columns
+    const quotedColumns = columns.map(column => `"${column}"`);
+    let finalQuery = `SELECT ${quotedColumns.join(', ')} FROM (${query}) AS subquery`;
+    console.log(finalQuery);
+
+    const finalResult = await client.query(finalQuery, params);
+    client.release();
+
+    // Transform column names
+    const transformColumnName = (column) => {
+      if (column === 'pconyynm') return 'Constituency';
+      if (column === 'rgn') return 'Region';
+      if (column === 'total_votes') return 'Total Votes';
+      if (column === 'turnout') return 'Turnout';
+      if (column === 'electorate') return 'Electorate';
+
+      let transformed = column.replace(/_/g, ' ');
+      if (transformed.includes('vote share')) {
+        transformed = transformed.replace('vote share ', '') + ' Vote Share';
+      } else if (transformed.includes(' votes')) {
+        transformed = transformed.replace(' votes', '') + ' Vote Share';
+      }
+      return transformed.replace(/\b\w/g, char => char.toUpperCase());
+    };
+
+    const transformedRows = finalResult.rows.map(row => {
+      const transformedRow = {};
+      Object.keys(row).forEach(key => {
+        transformedRow[transformColumnName(key)] = row[key];
+      });
+      return transformedRow;
+    });
+
+    res.json({ sqlQuery: finalQuery, data: transformedRows });
+  } catch (error) {
+    console.error('Error in getElectionResults:', error);
+    next(new Error('Failed to fetch election results'));
+  }
+}
+
 async function returnTableDetails(req, res, next) {
   try {
     const client = await pool.connect();
@@ -515,6 +654,8 @@ async function llmQuery(req, res, next) {
 }
 
 module.exports = {
+  getElectionResults,
+  getElectionFilters,
   getLargeRegions,
   returnSchemas,
   convertToSQL,

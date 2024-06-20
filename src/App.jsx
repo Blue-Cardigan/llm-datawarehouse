@@ -1,14 +1,17 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import LlmQueryForm from './llmQueryForm';
 import SearchAndFilter from './SearchAndFilter';
 import Login from './login';
 import Header from './Header';
 import DatasetViewer from './DatasetViewer';
+import HistoricElectionResults from './HistoricElectionResults';
 
 const tabSubtexts = {
   search: 'Find datasets, select locations, and download data.',
   llmQuery: 'Ask detailed questions across multiple datasets using LLM-based queries.',
   datasets: 'Explore and analyze datasets directly.',
+  electionResults: 'View historic election results by year, party, and constituency.',
 };
 
 function App() {
@@ -44,7 +47,7 @@ function App() {
   };
 
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;  // Pass handleLogin as onLogin
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
@@ -63,6 +66,7 @@ function App() {
         {activeTab === 'search' && <SearchAndFilter />}
         {activeTab === 'llmQuery' && <LlmQueryForm setActiveTab={setActiveTab} />}
         {activeTab === 'datasets' && <DatasetViewer />}
+        {activeTab === 'electionResults' && <HistoricElectionResults />}
       </div>
     </div>
   );
