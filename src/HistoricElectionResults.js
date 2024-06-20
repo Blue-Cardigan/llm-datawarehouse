@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ElectionsDisplay from './ElectionsDisplay';
 import GridDropdown from './GridDropdown';
+import Chart from './Chart';
+import './index.css';
 
 function HistoricElectionResults() {
   const [years, setYears] = useState(['2019']);
@@ -11,6 +13,8 @@ function HistoricElectionResults() {
   const [sqlQuery, setSqlQuery] = useState('');
   const [filters, setFilters] = useState({ years: [], parties: [], constituencies: [] });
   const [isLoading, setIsLoading] = useState(false);
+  const [alluvialData, setAlluvialData] = useState(null);
+  const cache = useRef({});
 
   useEffect(() => {
     fetchFilters();
@@ -24,9 +28,7 @@ function HistoricElectionResults() {
 
   const fetchFilters = async () => {
     try {
-      const response = await axios.get('/electionFilters', {
-        params: { year: years.join(',') }
-      });
+      const response = await axios.get('/electionFilters', { params: { year: years.join(',') } });
       setFilters(response.data);
     } catch (error) {
       console.error('Error fetching election filters:', error);
@@ -34,6 +36,14 @@ function HistoricElectionResults() {
   };
 
   const fetchData = async () => {
+    const cacheKey = JSON.stringify({ years, parties, constituencies });
+    if (cache.current[cacheKey]) {
+      setData(cache.current[cacheKey].data);
+      setSqlQuery(cache.current[cacheKey].sqlQuery);
+      updateAlluvialData(cache.current[cacheKey].data);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await axios.post('/elections', {
@@ -43,10 +53,45 @@ function HistoricElectionResults() {
       });
       setData(response.data.data);
       setSqlQuery(response.data.sqlQuery);
+      cache.current[cacheKey] = {
+        data: response.data.data,
+        sqlQuery: response.data.sqlQuery
+      };
+      updateAlluvialData(response.data.data);
+      console.log(cache.current[cacheKey]);
     } catch (error) {
       console.error('Error fetching election results:', error);
     }
     setIsLoading(false);
+  };
+
+  const updateAlluvialData = (data) => {
+    const alluvialJson = years.map(year => {
+      const yearData = data.filter(item => item.Year === parseInt(year));
+      const partyData = {};
+      
+      yearData.forEach(item => {
+        Object.entries(item).forEach(([key, value]) => {
+          if (key.includes('Votes') && key !== 'Total Votes' && value !== null) {
+            const party = key.replace(' Votes', '');
+            if (!partyData[party]) {
+              partyData[party] = 0;
+            }
+            partyData[party] += parseInt(value);
+          }
+        });
+      });
+
+      return {
+        year: year,
+        parties: Object.entries(partyData).map(([party, votes]) => ({
+          name: party,
+          votes: votes
+        }))
+      };
+    });
+
+    setAlluvialData(JSON.stringify(alluvialJson));
   };
 
   const capitalize = (str) => {
@@ -55,41 +100,50 @@ function HistoricElectionResults() {
 
   return (
     <div>
-      <h2>Historic Election Results</h2>
-      <div>
-        <label htmlFor="year">Year:</label>
-        <GridDropdown
-          id="year"
-          value={years}
-          onChange={setYears}
-          options={filters.years.map(y => ({ code: y.toString(), name: y.toString() }))}
-          placeholder="Select Years"
-          multiple={true}
-        />
+      <h1>Historic Election Results</h1>
+      <div className="filters">
+        <div>
+          <label htmlFor="year"></label>
+          <GridDropdown
+            id="year"
+            value={years}
+            onChange={setYears}
+            options={filters.years.map(y => ({ code: y.toString(), name: y.toString() }))}
+            placeholder="Select Years"
+            multiple={true}
+          />
+        </div>
+        <div>
+          <label htmlFor="party"></label>
+          <GridDropdown
+            id="party"
+            value={parties}
+            onChange={setParties}
+            options={filters.parties.map(p => ({ code: p, name: capitalize(p) }))}
+            placeholder="Select Parties"
+            multiple={true}
+          />
+        </div>
+        <div>
+          <label htmlFor="constituency"></label>
+          <GridDropdown
+            id="constituency"
+            value={constituencies}
+            onChange={setConstituencies}
+            options={filters.constituencies.map(c => ({ code: c, name: c }))}
+            placeholder="Select Constituencies"
+            multiple={true}
+          />
+        </div>
       </div>
-      <div>
-        <label htmlFor="party">Party:</label>
-        <GridDropdown
-          id="party"
-          value={parties}
-          onChange={setParties}
-          options={filters.parties.map(p => ({ code: p, name: capitalize(p) }))}
-          placeholder="Select Parties"
-          multiple={true}
-        />
-      </div>
-      <div>
-        <label htmlFor="constituency">Constituency:</label>
-        <GridDropdown
-          id="constituency"
-          value={constituencies}
-          onChange={setConstituencies}
-          options={filters.constituencies.map(c => ({ code: c, name: c }))}
-          placeholder="Select Constituencies"
-          multiple={true}
-        />
-      </div>
-      <ElectionsDisplay data={data} sqlQuery={sqlQuery} isLoading={isLoading} />
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        <>
+          {alluvialData && <Chart data={alluvialData} />}
+          <ElectionsDisplay data={data} sqlQuery={sqlQuery} />
+        </>
+      )}
     </div>
   );
 }

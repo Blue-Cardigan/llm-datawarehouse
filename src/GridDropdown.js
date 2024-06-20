@@ -4,6 +4,7 @@ import './index.css';
 const GridDropdown = ({ id, value, onChange, options, placeholder, multiple }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValues, setSelectedValues] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -44,19 +45,30 @@ const GridDropdown = ({ id, value, onChange, options, placeholder, multiple }) =
     onChange(newSelectedValues);
   };
 
+  const filteredOptions = options.filter(option =>
+    option.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="grid-dropdown" ref={dropdownRef}>
       <div className="grid-dropdown-header" onClick={() => setIsOpen(!isOpen)}>
-        {selectedValues.length > 0 
-          ? `${selectedValues.length} selected`
-          : placeholder}
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
+        />
       </div>
       {isOpen && (
         <div className="grid-dropdown-content">
           <div className="grid-dropdown-item toggle-all" onClick={toggleAll}>
             {selectedValues.length === options.length ? 'Deselect All' : 'Select All'}
           </div>
-          {options.map((option) => (
+          {filteredOptions.map((option) => (
             <div
               key={option.code}
               className={`grid-dropdown-item ${selectedValues.includes(option.code) ? 'selected' : ''}`}

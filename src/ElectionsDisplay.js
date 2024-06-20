@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import './index.css'; // Import the CSS file
 
 function ElectionsDisplay({ data, sqlQuery, userQuestion, isLoading }) {
   const [showQuery, setShowQuery] = useState(false);
@@ -99,6 +100,11 @@ function ElectionsDisplay({ data, sqlQuery, userQuestion, isLoading }) {
     setShowQuery(!showQuery);
   };
 
+  // Function to copy the SQL query to the clipboard
+  const copyQueryToClipboard = () => {
+    navigator.clipboard.writeText(sqlQuery);
+  };
+
   // Function to convert data to CSV and trigger download
   const downloadCSV = () => {
     const csvRows = [];
@@ -151,6 +157,7 @@ function ElectionsDisplay({ data, sqlQuery, userQuestion, isLoading }) {
       {showQuery && (
         <div className="query-display">
           <pre>{sqlQuery}</pre>
+          <button className="copy-button" onClick={copyQueryToClipboard}>Copy Query</button>
         </div>
       )}
       <div className="table-container">

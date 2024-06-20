@@ -3,6 +3,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  zoom: 0.98;
 }
 
 :root {
@@ -339,6 +340,14 @@ ul li:hover {
   100% { transform: rotate(360deg); }
 }
 
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
 .table-display-container {
   width: 100%;
   max-width: 100vw; /* Set maximum width to 80vw */
@@ -377,10 +386,17 @@ table {
 }
 
 .grid-dropdown-header {
-  padding: 10px;
   border: 1px solid #ccc;
   cursor: pointer;
   background-color: #171717;
+}
+
+.grid-dropdown-header input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background-color: #171717;
+  color: white;
 }
 
 .grid-dropdown-content {
@@ -397,6 +413,7 @@ table {
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 5px;
   padding: 10px;
+  width: 100%;
 }
 
 .grid-dropdown-item {
@@ -413,4 +430,74 @@ table {
 .grid-dropdown-item.selected {
   background-color: #797979;
   font-weight: bold;
+}
+
+.historic-election-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.filters {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
+.filters > div {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.elections-display {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.elections-display table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.elections-display th, .elections-display td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.elections-display th {
+  cursor: pointer;
+  background-color: #f2f2f2;
+  text-align: left;
+}
+
+.elections-display th:hover {
+  background-color: #ddd;
+}
+
+.query-display {
+  max-width: 50vw;
+  overflow-x: auto;
+  background-color: #848484;
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+  position: relative;
+}
+
+.copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.copy-button:hover {
+  background-color: #0056b3;
 }

@@ -80,7 +80,7 @@ async function getElectionFilters(req, res, next) {
 
     let query = `
       SELECT 
-        ARRAY_AGG(DISTINCT year ORDER BY year) AS years,
+        ARRAY_AGG(DISTINCT year ORDER BY year DESC) AS years,
         ARRAY_AGG(DISTINCT party) AS parties,
         ARRAY_AGG(DISTINCT pconyynm ORDER BY pconyynm) AS constituencies
       FROM (
@@ -158,13 +158,27 @@ async function getElectionResults(req, res, next) {
     const columns = Object.keys(result.rows[0]).filter(column => {
       return result.rows.some(row => row[column] !== null) && 
              column !== 'pconyynm_year' && 
-             column !== 'original_year';
+             column !== 'original_year' &&
+             column !== 'seats' &&
+             column !== 'rgn' &&
+             column !== 'county' &&
+             column !== 'pconyycd';
     });
 
+    // Ensure 'Total Votes' and 'Turnout' appear just after 'Electorate'
+    const orderedColumns = [];
+    const specialColumns = ['pconyynm', 'year', 'electorate', 'total_votes', 'turnout'];
+    specialColumns.forEach(col => {
+      if (columns.includes(col)) {
+        orderedColumns.push(col);
+        columns.splice(columns.indexOf(col), 1);
+      }
+    });
+    orderedColumns.push(...columns);
+
     // Construct the final query with the selected columns
-    const quotedColumns = columns.map(column => `"${column}"`);
+    const quotedColumns = orderedColumns.map(column => `"${column}"`);
     let finalQuery = `SELECT ${quotedColumns.join(', ')} FROM (${query}) AS subquery`;
-    console.log(finalQuery);
 
     const finalResult = await client.query(finalQuery, params);
     client.release();
@@ -179,9 +193,9 @@ async function getElectionResults(req, res, next) {
 
       let transformed = column.replace(/_/g, ' ');
       if (transformed.includes('vote share')) {
-        transformed = transformed.replace('vote share ', '') + ' Vote Share';
-      } else if (transformed.includes(' votes')) {
-        transformed = transformed.replace(' votes', '') + ' Vote Share';
+        transformed = transformed.replace('vote share ', '').replace('votes', '') + ' Vote Share';
+      } else if (transformed.includes(' votes') && !transformed.includes('vote share')) {
+        transformed = transformed.replace(' votes', '') + ' Votes';
       }
       return transformed.replace(/\b\w/g, char => char.toUpperCase());
     };
